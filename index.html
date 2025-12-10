@@ -23,6 +23,7 @@ header{
   display:flex;
   justify-content:space-between;
   align-items:center;
+  flex-wrap:wrap;
 }
 button{
   border:1px solid #30363d;
@@ -36,6 +37,15 @@ button{
 button:hover{
   background:#303a45;
 }
+select, input{
+  padding:6px;
+  border-radius:6px;
+  border:1px solid #30363d;
+  background:#161b22;
+  color:white;
+  margin-right:5px;
+}
+
 main{
   flex:1;
   display:flex;
@@ -86,7 +96,7 @@ iframe{
   z-index:10;
 }
 
-/* ------------- Light Mode ------------------ */
+/* Light mode */
 body.light{
   background:#ffffff;
   color:#000;
@@ -123,13 +133,19 @@ body.light .editorColumn{
 <body>
 <header>
   <div><strong>Web Playground</strong></div>
+
+  <!-- project ui -->
   <div>
+    <select id="projectsSelect"></select>
+    <input id="newProjectName" placeholder="Project name">
+    <button onclick="newProject()">New</button>
+    <button onclick="deleteProject()">Delete</button>
+
     <span id="status">Synced</span>
 
     <button onclick="manualSave()">Save</button>
     <button onclick="manualLoad()">Load</button>
     <button onclick="toggleTheme()" id="themeBtn">Light Mode</button>
-
     <button onclick="resetDefaults()">Reset</button>
   </div>
 </header>
@@ -158,6 +174,8 @@ const cssInput=document.getElementById("cssInput");
 const jsInput=document.getElementById("jsInput");
 const statusEl=document.getElementById("status");
 const preview=document.getElementById("preview");
+const projectsSelect=document.getElementById("projectsSelect");
+const newProjectName=document.getElementById("newProjectName");
 
 const DEFAULTS={
   html:"<h1>Hello</h1>",
@@ -165,34 +183,89 @@ const DEFAULTS={
   js:"console.log('hello');"
 };
 
-//------------- load  -----------------
-function load(){
-  htmlInput.value=localStorage.html||DEFAULTS.html;
-  cssInput.value=localStorage.css||DEFAULTS.css;
-  jsInput.value=localStorage.js||DEFAULTS.js;
+// ---------- MULTI PROJECT STORAGE ----------
+let currentProject = localStorage.currentProject || "default";
+let allProjects = JSON.parse(localStorage.projects || "{}");
+if(!allProjects[currentProject]) allProjects[currentProject]=DEFAULTS;
+
+function saveProjects(){
+  localStorage.projects = JSON.stringify(allProjects);
+}
+
+function refreshDropdown(){
+  projectsSelect.innerHTML="";
+  Object.keys(allProjects).forEach(name=>{
+    const opt=document.createElement("option");
+    opt.value=name;
+    opt.textContent=name;
+    if(name===currentProject) opt.selected=true;
+    projectsSelect.appendChild(opt);
+  });
+}
+
+function setProject(name){
+  currentProject=name;
+  localStorage.currentProject=name;
+  loadProject();
+  refreshDropdown();
+}
+
+function loadProject(){
+  const f=allProjects[currentProject]||DEFAULTS;
+  htmlInput.value=f.html;
+  cssInput.value=f.css;
+  jsInput.value=f.js;
   update();
 }
 
-//------------- save manual -----------------
+// create new
+function newProject(){
+  const name=newProjectName.value.trim();
+  if(!name) return alert("Enter a name");
+  if(allProjects[name]) return alert("Already exists");
+
+  allProjects[name]=DEFAULTS;
+  saveProjects();
+  setProject(name);
+}
+
+// delete
+function deleteProject(){
+  const name=projectsSelect.value;
+  delete allProjects[name];
+  saveProjects();
+  alert("Deleted! Reloading list.");
+  // choose another
+  const keys=Object.keys(allProjects);
+  currentProject = keys[0] || "default";
+  if(!allProjects[currentProject]) allProjects[currentProject]=DEFAULTS;
+  saveProjects();
+  setProject(currentProject);
+}
+
+// handle dropdown switch
+projectsSelect.addEventListener("change",()=>{
+  setProject(projectsSelect.value);
+});
+
+//------------- BASIC SAVE -------------
+function save(){
+  allProjects[currentProject]={
+    html:htmlInput.value,
+    css:cssInput.value,
+    js:jsInput.value
+  };
+  saveProjects();
+}
+
+// Manual save/load
 function manualSave(){
   save();
   statusEl.textContent="Saved!";
 }
-
-//------------- load manual -----------------
 function manualLoad(){
-  htmlInput.value = localStorage.html || DEFAULTS.html;
-  cssInput.value = localStorage.css || DEFAULTS.css;
-  jsInput.value = localStorage.js || DEFAULTS.js;
-  update();
+  loadProject();
   statusEl.textContent="Loaded!";
-}
-
-//------------- auto save -----------------
-function save(){
-  localStorage.html=htmlInput.value;
-  localStorage.css=cssInput.value;
-  localStorage.js=jsInput.value;
 }
 
 //------------- update preview ------------
@@ -212,10 +285,9 @@ function update(){
 
 //------------- Reset ------------------
 function resetDefaults(){
-  htmlInput.value=DEFAULTS.html;
-  cssInput.value=DEFAULTS.css;
-  jsInput.value=DEFAULTS.js;
-  update();
+  allProjects[currentProject]=DEFAULTS;
+  saveProjects();
+  loadProject();
 }
 
 //-------------- Fullscreen -------------
@@ -225,16 +297,14 @@ function toggleFullscreen(){
 
 //-------------- Theme -----------------
 function toggleTheme(){
-  const light = !document.body.classList.contains("light");
+  const light=!document.body.classList.contains("light");
   document.body.classList.toggle("light",light);
-  localStorage.theme = light ? "light" : "dark";
-  themeBtn.textContent = light ? "Dark Mode" : "Light Mode";
+  localStorage.theme=light?"light":"dark";
+  themeBtn.textContent=light?"Dark Mode":"Light Mode";
 }
-
-// Apply saved theme on startup
 if(localStorage.theme==="light"){
   document.body.classList.add("light");
-  themeBtn.textContent = "Dark Mode";
+  themeBtn.textContent="Dark Mode";
 }
 
 //-------------- typing delay ---------
@@ -255,7 +325,8 @@ document.addEventListener("keydown",e=>{
 });
 
 // INIT
-load();
+refreshDropdown();
+loadProject();
 </script>
 </body>
 </html>
