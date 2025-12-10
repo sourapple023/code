@@ -15,6 +15,7 @@ body{
   display:flex;
   flex-direction:column;
   height:100vh;
+  transition:background .3s,color .3s;
 }
 header{
   padding:10px 16px;
@@ -30,6 +31,7 @@ button{
   padding:6px 14px;
   border-radius:6px;
   cursor:pointer;
+  margin-left:5px;
 }
 button:hover{
   background:#303a45;
@@ -66,6 +68,7 @@ label{
   flex:1;
   display:flex;
   flex-direction:column;
+  position:relative;
 }
 iframe{
   flex:1;
@@ -81,6 +84,27 @@ iframe{
   top:8px;
   right:8px;
   z-index:10;
+}
+
+/* ------------- Light Mode ------------------ */
+body.light{
+  background:#ffffff;
+  color:#000;
+}
+body.light textarea{
+  background:#f2f2f2;
+  color:#000;
+}
+body.light button{
+  background:#eaeaea;
+  color:#000;
+  border-color:#ccc;
+}
+body.light header{
+  border-bottom-color:#ccc;
+}
+body.light .editorColumn{
+  border-right-color:#ccc;
 }
 
 @media(max-width:900px){
@@ -101,6 +125,11 @@ iframe{
   <div><strong>Web Playground</strong></div>
   <div>
     <span id="status">Synced</span>
+
+    <button onclick="manualSave()">Save</button>
+    <button onclick="manualLoad()">Load</button>
+    <button onclick="toggleTheme()" id="themeBtn">Light Mode</button>
+
     <button onclick="resetDefaults()">Reset</button>
   </div>
 </header>
@@ -131,8 +160,12 @@ const statusEl=document.getElementById("status");
 const preview=document.getElementById("preview");
 
 const DEFAULTS={
+  html:"<h1>Hello</h1>",
+  css:"h1{color:red;}",
+  js:"console.log('hello');"
 };
 
+//------------- load  -----------------
 function load(){
   htmlInput.value=localStorage.html||DEFAULTS.html;
   cssInput.value=localStorage.css||DEFAULTS.css;
@@ -140,24 +173,44 @@ function load(){
   update();
 }
 
+//------------- save manual -----------------
+function manualSave(){
+  save();
+  statusEl.textContent="Saved!";
+}
+
+//------------- load manual -----------------
+function manualLoad(){
+  htmlInput.value = localStorage.html || DEFAULTS.html;
+  cssInput.value = localStorage.css || DEFAULTS.css;
+  jsInput.value = localStorage.js || DEFAULTS.js;
+  update();
+  statusEl.textContent="Loaded!";
+}
+
+//------------- auto save -----------------
 function save(){
   localStorage.html=htmlInput.value;
   localStorage.css=cssInput.value;
   localStorage.js=jsInput.value;
 }
 
+//------------- update preview ------------
 function update(){
   statusEl.textContent="Updating…";
   const html=htmlInput.value;
   const css=cssInput.value;
   const js=jsInput.value.replace(/<\/script/ig,"<\\/script");
+
   preview.srcdoc=`<!DOCTYPE html>
   <html><head><style>${css}</style></head>
   <body>${html}<script>${js}<\/script></body></html>`;
+
   setTimeout(()=>statusEl.textContent="Synced",100);
   save();
 }
 
+//------------- Reset ------------------
 function resetDefaults(){
   htmlInput.value=DEFAULTS.html;
   cssInput.value=DEFAULTS.css;
@@ -165,10 +218,26 @@ function resetDefaults(){
   update();
 }
 
+//-------------- Fullscreen -------------
 function toggleFullscreen(){
   preview.requestFullscreen();
 }
 
+//-------------- Theme -----------------
+function toggleTheme(){
+  const light = !document.body.classList.contains("light");
+  document.body.classList.toggle("light",light);
+  localStorage.theme = light ? "light" : "dark";
+  themeBtn.textContent = light ? "Dark Mode" : "Light Mode";
+}
+
+// Apply saved theme on startup
+if(localStorage.theme==="light"){
+  document.body.classList.add("light");
+  themeBtn.textContent = "Dark Mode";
+}
+
+//-------------- typing delay ---------
 [htmlInput,cssInput,jsInput].forEach(el=>
   el.addEventListener("input",()=>{
     statusEl.textContent="Typing…";
@@ -177,6 +246,15 @@ function toggleFullscreen(){
   })
 );
 
+//-------------- Ctrl+S ---------------
+document.addEventListener("keydown",e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==="s"){
+    e.preventDefault();
+    manualSave();
+  }
+});
+
+// INIT
 load();
 </script>
 </body>
