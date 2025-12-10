@@ -1,305 +1,186 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Mini Code Playground</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #050816;
-      color: #e5e7eb;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    header {
-      padding: 10px 16px;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.3);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    header h1 {
-      font-size: 16px;
-      margin: 0;
-      font-weight: 600;
-    }
-
-    header span {
-      font-size: 12px;
-      opacity: 0.8;
-    }
-
-    #status {
-      font-size: 12px;
-      opacity: 0.8;
-    }
-
-    button {
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      background: rgba(15, 23, 42, 0.85);
-      color: #e5e7eb;
-      border-radius: 999px;
-      padding: 6px 12px;
-      font-size: 12px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    button:hover {
-      background: rgba(30, 64, 175, 0.8);
-      border-color: rgba(96, 165, 250, 0.9);
-    }
-
-    main {
-      flex: 1;
-      display: flex;
-      min-height: 0;
-    }
-
-    .pane {
-      padding: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      min-width: 0;
-    }
-
-    .pane-title {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      opacity: 0.7;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .pane-title span {
-      font-size: 10px;
-      opacity: 0.7;
-    }
-
-    textarea {
-      width: 100%;
-      flex: 1;
-      min-height: 0;
-      resize: none;
-      background: rgba(15, 23, 42, 0.9);
-      border-radius: 8px;
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      color: #e5e7eb;
-      padding: 8px;
-      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 12px;
-      line-height: 1.4;
-      outline: none;
-    }
-
-    textarea:focus {
-      border-color: rgba(96, 165, 250, 0.9);
-      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.8);
-    }
-
-    iframe {
-      width: 100%;
-      height: 100%;
-      border-radius: 8px;
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      background: white;
-    }
-
-    .left,
-    .right {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .editors {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
-      flex: 1;
-      min-height: 0;
-    }
-
-    @media (max-width: 900px) {
-      main {
-        flex-direction: column;
-      }
-      .editors {
-        grid-template-columns: 1fr;
-        grid-auto-rows: minmax(120px, 1fr);
-      }
-      iframe {
-        min-height: 200px;
-      }
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <div>
-      <h1>Mini Code Playground</h1>
-      <span>HTML + CSS + JS with live preview</span>
-    </div>
-    <div style="display:flex; align-items:center; gap:8px;">
-      <span id="status">Synced</span>
-      <button id="resetBtn" type="button">Reset</button>
-    </div>
-  </header>
-
-  <main>
-    <section class="pane left">
-      <div class="editors">
-        <div class="editor-block">
-          <div class="pane-title">
-            HTML
-            <span>&lt;body&gt;</span>
-          </div>
-          <textarea id="htmlInput"></textarea>
-        </div>
-        <div class="editor-block">
-          <div class="pane-title">
-            CSS
-            <span>body {}</span>
-          </div>
-          <textarea id="cssInput"></textarea>
-        </div>
-        <div class="editor-block">
-          <div class="pane-title">
-            JavaScript
-            <span>console.log()</span>
-          </div>
-          <textarea id="jsInput"></textarea>
-        </div>
-      </div>
-    </section>
-
-    <section class="pane right">
-      <div class="pane-title">
-        Preview
-        <span>Rendered output</span>
-      </div>
-      <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin"></iframe>
-    </section>
-  </main>
-
-  <script>
-    const htmlInput = document.getElementById("htmlInput");
-    const cssInput = document.getElementById("cssInput");
-    const jsInput = document.getElementById("jsInput");
-    const previewFrame = document.getElementById("previewFrame");
-    const statusText = document.getElementById("status");
-    const resetBtn = document.getElementById("resetBtn");
-
-    let updateTimer = null;
-
-    const defaultHTML = `<!-- Try editing me! -->
-<h1>Hello, world 👋</h1>
-<p>This is a <strong>live preview</strong> of your code.</p>
-<button onclick="alert('It works!')">Click me</button>
-`;
-
-    const defaultCSS = `body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: radial-gradient(circle at top, #1d4ed8, #020617);
-  color: #e5e7eb;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-}
-
-h1 {
-  margin-bottom: 0.3em;
-}
-
-button {
-  margin-top: 1em;
-  padding: 0.6em 1.2em;
-  border-radius: 999px;
-  border: none;
-  cursor: pointer;
-}
-`;
-
-    const defaultJS = `console.log("Hello from the preview!");`;
-
-    function setDefaults() {
-      htmlInput.value = defaultHTML;
-      cssInput.value = defaultCSS;
-      jsInput.value = defaultJS;
-      updatePreview();
-    }
-
-    function buildSrcDoc(html, css, js) {
-      // IMPORTANT: escape </script> so the browser doesn't close the script early
-      const safeJS = js.replace(/<\/script/gi, '<\\/script');
-      return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
 <meta charset="UTF-8" />
-<title>Preview</title>
+<title>Web Playground</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+
 <style>
-${css}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui;
+  background:#0d1117;
+  color:#e6edf3;
+  display:flex;
+  flex-direction:column;
+  height:100vh;
+}
+header{
+  padding:10px 16px;
+  border-bottom:1px solid #30363d;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+button{
+  border:1px solid #30363d;
+  background:#1b222c;
+  color:white;
+  padding:6px 14px;
+  border-radius:6px;
+  cursor:pointer;
+}
+button:hover{
+  background:#303a45;
+}
+main{
+  flex:1;
+  display:flex;
+  min-height:0;
+}
+.editorColumn{
+  width:400px;
+  display:flex;
+  flex-direction:column;
+  border-right:1px solid #30363d;
+}
+textarea{
+  flex:1;
+  background:#161b22;
+  color:white;
+  border:none;
+  outline:none;
+  resize:none;
+  padding:10px;
+  font-family:monospace;
+  font-size:14px;
+  margin-bottom:10px;
+}
+label{
+  font-size:12px;
+  margin-bottom:4px;
+  opacity:0.65;
+}
+.preview{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+iframe{
+  flex:1;
+  border:none;
+  background:white;
+}
+#status{
+  font-size:12px;
+  opacity:0.7;
+}
+.fullscreen{
+  position:absolute;
+  top:8px;
+  right:8px;
+  z-index:10;
+}
+
+@media(max-width:900px){
+  main{
+    flex-direction:column;
+  }
+  .editorColumn{
+    width:100%;
+    border-right:none;
+    border-bottom:1px solid #30363d;
+  }
+}
 </style>
 </head>
+
 <body>
-${html}
+<header>
+  <div><strong>Web Playground</strong></div>
+  <div>
+    <span id="status">Synced</span>
+    <button onclick="resetDefaults()">Reset</button>
+  </div>
+</header>
+
+<main>
+  <div class="editorColumn">
+    <label>HTML</label>
+    <textarea id="htmlInput"></textarea>
+
+    <label>CSS</label>
+    <textarea id="cssInput"></textarea>
+
+    <label>JavaScript</label>
+    <textarea id="jsInput"></textarea>
+  </div>
+
+  <div class="preview">
+    <button class="fullscreen" onclick="toggleFullscreen()">Fullscreen</button>
+    <iframe id="preview"></iframe>
+  </div>
+</main>
+
 <script>
-${safeJS}
+const htmlInput=document.getElementById("htmlInput");
+const cssInput=document.getElementById("cssInput");
+const jsInput=document.getElementById("jsInput");
+const statusEl=document.getElementById("status");
+const preview=document.getElementById("preview");
+
+const DEFAULTS={
+  html:`<h1>Hello 👋</h1><p>Edit HTML/CSS/JS</p>`,
+  css:`body{font-family:sans-serif;padding:20px;background:#eee}`,
+  js:`console.log("Hello from JS")`
+};
+
+function load(){
+  htmlInput.value=localStorage.html||DEFAULTS.html;
+  cssInput.value=localStorage.css||DEFAULTS.css;
+  jsInput.value=localStorage.js||DEFAULTS.js;
+  update();
+}
+
+function save(){
+  localStorage.html=htmlInput.value;
+  localStorage.css=cssInput.value;
+  localStorage.js=jsInput.value;
+}
+
+function update(){
+  statusEl.textContent="Updating…";
+  const html=htmlInput.value;
+  const css=cssInput.value;
+  const js=jsInput.value.replace(/<\/script/ig,"<\\/script");
+  preview.srcdoc=`<!DOCTYPE html>
+  <html><head><style>${css}</style></head>
+  <body>${html}<script>${js}<\/script></body></html>`;
+  setTimeout(()=>statusEl.textContent="Synced",100);
+  save();
+}
+
+function resetDefaults(){
+  htmlInput.value=DEFAULTS.html;
+  cssInput.value=DEFAULTS.css;
+  jsInput.value=DEFAULTS.js;
+  update();
+}
+
+function toggleFullscreen(){
+  preview.requestFullscreen();
+}
+
+[htmlInput,cssInput,jsInput].forEach(el=>
+  el.addEventListener("input",()=>{
+    statusEl.textContent="Typing…";
+    clearTimeout(window.upTimer);
+    window.upTimer=setTimeout(update,300);
+  })
+);
+
+load();
 </script>
-</body>
-</html>`;
-    }
-
-    function updatePreview() {
-      const html = htmlInput.value;
-      const css = cssInput.value;
-      const js = jsInput.value;
-
-      statusText.textContent = "Updating…";
-
-      const srcDoc = buildSrcDoc(html, css, js);
-      previewFrame.srcdoc = srcDoc;
-
-      // tiny delay so you can see status change
-      setTimeout(() => {
-        statusText.textContent = "Synced";
-      }, 150);
-    }
-
-    function scheduleUpdate() {
-      statusText.textContent = "Typing…";
-      if (updateTimer) clearTimeout(updateTimer);
-      updateTimer = setTimeout(updatePreview, 350);
-    }
-
-    htmlInput.addEventListener("input", scheduleUpdate);
-    cssInput.addEventListener("input", scheduleUpdate);
-    jsInput.addEventListener("input", scheduleUpdate);
-
-    resetBtn.addEventListener("click", () => {
-      setDefaults();
-    });
-
-    // Initialize with defaults on load
-    setDefaults();
-  </script>
 </body>
 </html>
