@@ -50,15 +50,16 @@ main{
   flex:1;
   display:flex;
   min-height:0;
+  position:relative;
 }
 
 /* EDITOR */
 .editorColumn{
-  width:420px;
   display:flex;
   flex-direction:column;
   border-right:1px solid #30363d;
   position:relative;
+  min-width:280px;
 }
 label{
   font-size:11px;
@@ -72,31 +73,42 @@ textarea{
   resize:none;
   background:#161b22;
   color:white;
-  padding:10px;
+  padding:12px;
   font-family:monospace;
-  font-size:13px;
+  font-size:14px;
 }
 
 /* 👻 Ghost */
 .ghost{
   position:absolute;
-  left:10px;
-  right:10px;
-  bottom:10px;
+  left:12px;
+  right:12px;
+  bottom:12px;
   color:#6b7280;
   font-family:monospace;
-  font-size:13px;
+  font-size:14px;
   pointer-events:none;
   white-space:pre-wrap;
   opacity:.45;
   display:none;
 }
 
+/* DIVIDER */
+.divider{
+  width:6px;
+  cursor:col-resize;
+  background:#0b0f14;
+  border-left:1px solid #30363d;
+  border-right:1px solid #30363d;
+}
+.divider:hover{background:#30363d}
+
 /* PREVIEW */
 .preview{
   flex:1;
   display:flex;
   flex-direction:column;
+  min-width:240px;
 }
 iframe{
   flex:1;
@@ -112,9 +124,10 @@ iframe{
   background:#0b0f14;
 }
 
-/* FULLSCREEN */
+/* FULLSCREEN PREVIEW */
 body.fs header,
-body.fs .editorColumn{
+body.fs .editorColumn,
+body.fs .divider{
   display:none;
 }
 body.fs .preview{
@@ -124,11 +137,40 @@ body.fs .preview{
   background:#000;
 }
 
+/* FULLSCREEN EDITOR */
+body.efs header,
+body.efs .preview,
+body.efs .divider{
+  display:none;
+}
+body.efs .editorColumn{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  border:none;
+}
+
+/* FLOATING EXIT */
+.fs-exit{
+  position:fixed;
+  bottom:16px;
+  right:16px;
+  z-index:10000;
+  padding:10px 16px;
+  border-radius:999px;
+  font-size:14px;
+  display:none;
+}
+body.fs .fs-exit,
+body.efs .fs-exit{
+  display:block;
+}
+
 /* MOBILE */
 @media(max-width:900px){
   main{flex-direction:column}
+  .divider{display:none}
   .editorColumn{
-    width:100%;
     border-right:none;
     border-bottom:1px solid #30363d;
   }
@@ -140,176 +182,113 @@ body.fs .preview{
 <header>
   <strong>Web Playground</strong>
   <div>
-    <input id="nlInput" placeholder="say what you want…" />
     <button onclick="run()">Run</button>
-    <button onclick="toggleFullscreen()" id="fsBtn">Fullscreen</button>
-    <button onclick="acceptGhost()">👻</button>
-    <button onclick="toggleMaintenance()" id="maintBtn">Maintenance</button>
+    <button onclick="togglePreviewFS()">Preview FS</button>
+    <button onclick="toggleEditorFS()">Editor FS</button>
     <span id="status">Ready</span>
   </div>
 </header>
 
 <main>
-  <div class="editorColumn">
+  <div class="editorColumn" id="editor">
     <label>HTML Document</label>
     <textarea id="doc"></textarea>
     <div class="ghost" id="ghost"></div>
   </div>
 
+  <div class="divider" id="divider"></div>
+
   <div class="preview">
     <iframe id="preview"></iframe>
-    <div class="panel" id="brain"></div>
+    <div class="panel">🧠 ready</div>
   </div>
 </main>
 
+<button class="fs-exit" onclick="exitFullscreen()">Exit Fullscreen</button>
+
 <script>
-/* ELEMENTS */
+/* ───── ELEMENTS ───── */
 const docI = document.getElementById("doc")
-const nlInput = document.getElementById("nlInput")
 const preview = document.getElementById("preview")
-const ghostEl = document.getElementById("ghost")
-const brainEl = document.getElementById("brain")
-const fsBtn = document.getElementById("fsBtn")
-const maintBtn = document.getElementById("maintBtn")
+const editor = document.getElementById("editor")
+const divider = document.getElementById("divider")
 const statusEl = document.getElementById("status")
 
-/* ───── FULLSCREEN (SYNC SAFE) ───── */
-function toggleFullscreen(){
-  const active = document.fullscreenElement || document.body.classList.contains("fs")
-  if(!active){
-    document.body.classList.add("fs")
-    document.documentElement.requestFullscreen?.().catch(()=>{})
-  }else{
-    document.exitFullscreen?.()
-    document.body.classList.remove("fs")
-  }
+/* ───── DRAG DIVIDER ───── */
+let dragging=false
+divider.addEventListener("pointerdown",e=>{
+  dragging=true
+  divider.setPointerCapture(e.pointerId)
+})
+window.addEventListener("pointermove",e=>{
+  if(!dragging) return
+  const min=280
+  const max=window.innerWidth-240
+  const w=Math.min(max,Math.max(min,e.clientX))
+  editor.style.flex=`0 0 ${w}px`
+})
+window.addEventListener("pointerup",()=>dragging=false)
+
+/* ───── FULLSCREEN MODES ───── */
+function togglePreviewFS(){
+  document.body.classList.toggle("fs")
+  document.body.classList.remove("efs")
 }
-addEventListener("fullscreenchange",()=>{
-  const on = !!document.fullscreenElement
-  document.body.classList.toggle("fs",on)
-  fsBtn.textContent = on ? "Exit" : "Fullscreen"
+function toggleEditorFS(){
+  document.body.classList.toggle("efs")
+  document.body.classList.remove("fs")
+}
+function exitFullscreen(){
+  document.body.classList.remove("fs","efs")
+}
+
+/* ESC EXIT (desktop) */
+window.addEventListener("keydown",e=>{
+  if(e.key==="Escape") exitFullscreen()
 })
 
-/* ───── MAINTENANCE MODE (IDEMPOTENT) ───── */
-const Maintenance = { enabled:false, ran:false }
-function toggleMaintenance(){
-  Maintenance.enabled = !Maintenance.enabled
-  Maintenance.ran = false
-  maintBtn.textContent = Maintenance.enabled ? "Maintenance ON" : "Maintenance"
-}
+/* ───── SWIPE DOWN TO EXIT (MOBILE) ───── */
+let touchStartY=null
+let touchStartX=null
 
-/* ───── SAFE HELPERS ───── */
-function ensureHead(html){
-  if(/<head[\s>]/i.test(html)) return html
-  return html.replace(/<html[^>]*>/i, m => m + "\n<head></head>")
-}
+window.addEventListener("touchstart",e=>{
+  if(!document.body.classList.contains("fs") &&
+     !document.body.classList.contains("efs")) return
 
-function ensureViewport(html){
-  if(/viewport/i.test(html)) return html
-  html = ensureHead(html)
-  return html.replace(/<head[^>]*>/i,
-    m => m + `\n<meta name="viewport" content="width=device-width, initial-scale=1">`)
-}
+  const t=e.touches[0]
+  touchStartY=t.clientY
+  touchStartX=t.clientX
+},{passive:true})
+
+window.addEventListener("touchmove",e=>{
+  if(touchStartY===null) return
+
+  const t=e.touches[0]
+  const dy=t.clientY-touchStartY
+  const dx=Math.abs(t.clientX-touchStartX)
+
+  // Require mostly vertical swipe
+  if(dy>120 && dx<60){
+    exitFullscreen()
+    touchStartY=null
+    touchStartX=null
+  }
+},{passive:true})
+
+window.addEventListener("touchend",()=>{
+  touchStartY=null
+  touchStartX=null
+})
 
 /* ───── RUN ───── */
 function run(){
-  let html = docI.value
-
-  if(Maintenance.enabled && !Maintenance.ran){
-    html = ensureViewport(html)
-    Maintenance.ran = true
-    docI.value = html
-  }
-
-  // Ensure valid preview document
+  let html=docI.value
   if(!/<!doctype/i.test(html)){
-    html = `<!DOCTYPE html>\n${html}`
+    html=`<!DOCTYPE html>\n${html}`
   }
-
-  preview.srcdoc = html
-  analyze()
-  statusEl.textContent =
-    Maintenance.enabled ? "Maintenance active" : "Synced"
+  preview.srcdoc=html
+  statusEl.textContent="Synced"
 }
-
-/* ───── BRAIN MEMORY ───── */
-const brain = JSON.parse(localStorage.brain || '{"accepts":{},"ignores":{}}')
-const saveBrain = ()=>localStorage.brain = JSON.stringify(brain)
-
-/* ───── NATURAL LANGUAGE → GHOST (SAFE) ───── */
-let currentGhost=null
-
-function nlToSuggestion(text){
-  text=text.toLowerCase()
-
-  if(text.includes("responsive"))
-    return {
-      key:"viewport",
-      ghost:`<meta name="viewport" content="width=device-width, initial-scale=1">`,
-      apply:()=>docI.value = ensureViewport(docI.value)
-    }
-
-  if(text.includes("button"))
-    return {
-      key:"button",
-      ghost:`<button>Click me</button>`,
-      apply:()=>{
-        if(!/<button/i.test(docI.value))
-          docI.value += `\n<button>Click me</button>`
-      }
-    }
-
-  if(text.includes("center"))
-    return {
-      key:"center",
-      ghost:`<style>body{display:flex;align-items:center;justify-content:center}</style>`,
-      apply:()=>{
-        if(!/display:flex/i.test(docI.value))
-          docI.value +=
-            `\n<style>body{display:flex;align-items:center;justify-content:center}</style>`
-      }
-    }
-
-  return null
-}
-
-/* ───── ANALYZE ───── */
-function analyze(){
-  ghostEl.style.display="none"
-  brainEl.textContent="🧠 ready"
-}
-
-/* NL INPUT */
-nlInput.addEventListener("keydown",e=>{
-  if(e.key==="Enter"){
-    const s = nlToSuggestion(nlInput.value)
-    nlInput.value=""
-    if(!s) return
-    currentGhost=s
-    ghostEl.textContent=s.ghost
-    ghostEl.style.display="block"
-    brainEl.textContent="🧠 suggestion ready"
-  }
-})
-
-/* ACCEPT GHOST */
-function acceptGhost(){
-  if(!currentGhost) return
-  brain.accepts[currentGhost.key]=(brain.accepts[currentGhost.key]||0)+1
-  saveBrain()
-  currentGhost.apply()
-  ghostEl.style.display="none"
-  currentGhost=null
-  run()
-}
-
-/* TAB ACCEPT */
-docI.addEventListener("keydown",e=>{
-  if(e.key==="Tab" && currentGhost){
-    e.preventDefault()
-    acceptGhost()
-  }
-})
 
 /* AUTORUN */
 let t
