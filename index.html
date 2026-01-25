@@ -33,7 +33,7 @@ header{
   justify-content:space-between;
 }
 
-button{
+button,input{
   border:1px solid #30363d;
   background:#161b22;
   color:white;
@@ -52,9 +52,9 @@ main{
   min-height:0;
 }
 
-/* EDITORS */
+/* EDITOR */
 .editorColumn{
-  width:380px;
+  width:420px;
   display:flex;
   flex-direction:column;
   border-right:1px solid #30363d;
@@ -75,11 +75,9 @@ textarea{
   padding:10px;
   font-family:monospace;
   font-size:13px;
-  position:relative;
-  z-index:1;
 }
 
-/* 👻 Ghost suggestion */
+/* 👻 Ghost */
 .ghost{
   position:absolute;
   left:10px;
@@ -91,6 +89,7 @@ textarea{
   pointer-events:none;
   white-space:pre-wrap;
   opacity:.45;
+  display:none;
 }
 
 /* PREVIEW */
@@ -98,7 +97,6 @@ textarea{
   flex:1;
   display:flex;
   flex-direction:column;
-  position:relative;
 }
 iframe{
   flex:1;
@@ -112,18 +110,6 @@ iframe{
   padding:8px;
   border-top:1px solid #30363d;
   background:#0b0f14;
-}
-
-/* SUGGESTIONS */
-.suggestion{
-  border:1px solid #30363d;
-  border-radius:6px;
-  padding:6px;
-  margin-bottom:6px;
-}
-.suggestion button{
-  margin-top:4px;
-  font-size:12px;
 }
 
 /* FULLSCREEN */
@@ -154,24 +140,20 @@ body.fs .preview{
 <header>
   <strong>Web Playground</strong>
   <div>
+    <input id="nlInput" placeholder="say what you want…" />
     <button onclick="run()">Run</button>
     <button onclick="toggleFullscreen()" id="fsBtn">Fullscreen</button>
-    <button onclick="acceptGhost()">👻 Ghost</button>
+    <button onclick="acceptGhost()">👻</button>
+    <button onclick="toggleMaintenance()" id="maintBtn">Maintenance</button>
     <span id="status">Ready</span>
   </div>
 </header>
 
 <main>
   <div class="editorColumn">
-    <label>HTML</label>
-    <textarea id="html"></textarea>
+    <label>HTML Document</label>
+    <textarea id="doc"></textarea>
     <div class="ghost" id="ghost"></div>
-
-    <label>CSS</label>
-    <textarea id="css"></textarea>
-
-    <label>JavaScript</label>
-    <textarea id="js"></textarea>
   </div>
 
   <div class="preview">
@@ -182,105 +164,133 @@ body.fs .preview{
 
 <script>
 /* ELEMENTS */
-const htmlI=html, cssI=css, jsI=js
-const preview=document.getElementById("preview")
-const brainEl=document.getElementById("brain")
-const ghostEl=document.getElementById("ghost")
-const fsBtn=document.getElementById("fsBtn")
-const statusEl=document.getElementById("status")
+const docI = document.getElementById("doc")
+const nlInput = document.getElementById("nlInput")
+const preview = document.getElementById("preview")
+const ghostEl = document.getElementById("ghost")
+const brainEl = document.getElementById("brain")
+const fsBtn = document.getElementById("fsBtn")
+const maintBtn = document.getElementById("maintBtn")
+const statusEl = document.getElementById("status")
 
-/* BRAIN MEMORY */
-const brain = JSON.parse(localStorage.brain || `{"accepts":{},"ignores":{}}`)
-const saveBrain=()=>localStorage.brain=JSON.stringify(brain)
-
-/* RUN */
-function run(){
-  preview.srcdoc=`
-<!DOCTYPE html>
-<html>
-<head><style>${cssI.value}</style></head>
-<body>
-${htmlI.value}
-<script>
-${jsI.value.replace(/<\/script/ig,"<\\/script")}
-<\/script>
-</body>
-</html>`
-  analyze()
-  statusEl.textContent="Synced"
-}
-
-/* FULLSCREEN TOGGLE (HARD SAFE) */
+/* ───── FULLSCREEN (SYNC SAFE) ───── */
 function toggleFullscreen(){
-  const fsActive = document.fullscreenElement || document.body.classList.contains("fs")
-
-  if(!fsActive){
+  const active = document.fullscreenElement || document.body.classList.contains("fs")
+  if(!active){
     document.body.classList.add("fs")
     document.documentElement.requestFullscreen?.().catch(()=>{})
-    fsBtn.textContent="Exit"
   }else{
     document.exitFullscreen?.()
     document.body.classList.remove("fs")
-    fsBtn.textContent="Fullscreen"
   }
 }
-document.addEventListener("fullscreenchange",()=>{
-  const on=!!document.fullscreenElement
+addEventListener("fullscreenchange",()=>{
+  const on = !!document.fullscreenElement
   document.body.classList.toggle("fs",on)
-  fsBtn.textContent=on?"Exit":"Fullscreen"
+  fsBtn.textContent = on ? "Exit" : "Fullscreen"
 })
 
-/* ANALYZE + GHOST */
+/* ───── MAINTENANCE MODE (IDEMPOTENT) ───── */
+const Maintenance = { enabled:false, ran:false }
+function toggleMaintenance(){
+  Maintenance.enabled = !Maintenance.enabled
+  Maintenance.ran = false
+  maintBtn.textContent = Maintenance.enabled ? "Maintenance ON" : "Maintenance"
+}
+
+/* ───── SAFE HELPERS ───── */
+function ensureHead(html){
+  if(/<head[\s>]/i.test(html)) return html
+  return html.replace(/<html[^>]*>/i, m => m + "\n<head></head>")
+}
+
+function ensureViewport(html){
+  if(/viewport/i.test(html)) return html
+  html = ensureHead(html)
+  return html.replace(/<head[^>]*>/i,
+    m => m + `\n<meta name="viewport" content="width=device-width, initial-scale=1">`)
+}
+
+/* ───── RUN ───── */
+function run(){
+  let html = docI.value
+
+  if(Maintenance.enabled && !Maintenance.ran){
+    html = ensureViewport(html)
+    Maintenance.ran = true
+    docI.value = html
+  }
+
+  // Ensure valid preview document
+  if(!/<!doctype/i.test(html)){
+    html = `<!DOCTYPE html>\n${html}`
+  }
+
+  preview.srcdoc = html
+  analyze()
+  statusEl.textContent =
+    Maintenance.enabled ? "Maintenance active" : "Synced"
+}
+
+/* ───── BRAIN MEMORY ───── */
+const brain = JSON.parse(localStorage.brain || '{"accepts":{},"ignores":{}}')
+const saveBrain = ()=>localStorage.brain = JSON.stringify(brain)
+
+/* ───── NATURAL LANGUAGE → GHOST (SAFE) ───── */
 let currentGhost=null
 
-function analyze(){
-  brainEl.innerHTML=""
-  ghostEl.textContent=""
-  currentGhost=null
+function nlToSuggestion(text){
+  text=text.toLowerCase()
 
-  const suggestions=[]
-
-  const score=k=>(brain.accepts[k]||0)-(brain.ignores[k]||0)
-  const suggest=(key,text,apply)=>suggestions.push({key,text,apply,weight:score(key)})
-
-  if(htmlI.value && !htmlI.value.includes("viewport")){
-    suggest("viewport","<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">",()=>{
-      htmlI.value=`<meta name="viewport" content="width=device-width, initial-scale=1">\n`+htmlI.value
-    })
-  }
-
-  if(jsI.value && !jsI.value.includes("DOMContentLoaded")){
-    suggest("domready","document.addEventListener(\"DOMContentLoaded\",()=>{ … })",()=>{
-      jsI.value=`document.addEventListener("DOMContentLoaded",()=>{\n${jsI.value}\n});`
-    })
-  }
-
-  if(!suggestions.length){
-    brainEl.textContent="🧠 No suggestions"
-    return
-  }
-
-  suggestions.sort((a,b)=>b.weight-a.weight)
-  const top=suggestions[0]
-  currentGhost=top
-  ghostEl.textContent=top.text
-
-  suggestions.forEach(s=>{
-    const div=document.createElement("div")
-    div.className="suggestion"
-    div.innerHTML=s.text+"<br>"
-    const a=document.createElement("button")
-    a.textContent="Apply"
-    a.onclick=()=>{
-      brain.accepts[s.key]=(brain.accepts[s.key]||0)+1
-      saveBrain()
-      s.apply()
-      run()
+  if(text.includes("responsive"))
+    return {
+      key:"viewport",
+      ghost:`<meta name="viewport" content="width=device-width, initial-scale=1">`,
+      apply:()=>docI.value = ensureViewport(docI.value)
     }
-    div.appendChild(a)
-    brainEl.appendChild(div)
-  })
+
+  if(text.includes("button"))
+    return {
+      key:"button",
+      ghost:`<button>Click me</button>`,
+      apply:()=>{
+        if(!/<button/i.test(docI.value))
+          docI.value += `\n<button>Click me</button>`
+      }
+    }
+
+  if(text.includes("center"))
+    return {
+      key:"center",
+      ghost:`<style>body{display:flex;align-items:center;justify-content:center}</style>`,
+      apply:()=>{
+        if(!/display:flex/i.test(docI.value))
+          docI.value +=
+            `\n<style>body{display:flex;align-items:center;justify-content:center}</style>`
+      }
+    }
+
+  return null
 }
+
+/* ───── ANALYZE ───── */
+function analyze(){
+  ghostEl.style.display="none"
+  brainEl.textContent="🧠 ready"
+}
+
+/* NL INPUT */
+nlInput.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    const s = nlToSuggestion(nlInput.value)
+    nlInput.value=""
+    if(!s) return
+    currentGhost=s
+    ghostEl.textContent=s.ghost
+    ghostEl.style.display="block"
+    brainEl.textContent="🧠 suggestion ready"
+  }
+})
 
 /* ACCEPT GHOST */
 function acceptGhost(){
@@ -288,25 +298,28 @@ function acceptGhost(){
   brain.accepts[currentGhost.key]=(brain.accepts[currentGhost.key]||0)+1
   saveBrain()
   currentGhost.apply()
+  ghostEl.style.display="none"
+  currentGhost=null
   run()
 }
 
-/* TAB ACCEPT (DESKTOP) */
-htmlI.addEventListener("keydown",e=>{
+/* TAB ACCEPT */
+docI.addEventListener("keydown",e=>{
   if(e.key==="Tab" && currentGhost){
     e.preventDefault()
     acceptGhost()
   }
 })
 
-/* INPUT */
+/* AUTORUN */
 let t
-;[htmlI,cssI,jsI].forEach(el=>el.oninput=()=>{
+docI.oninput=()=>{
   statusEl.textContent="Typing…"
   clearTimeout(t)
   t=setTimeout(run,300)
-})
+}
 
+/* INIT */
 run()
 </script>
 </body>
