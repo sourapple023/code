@@ -3,77 +3,80 @@
 <head>
 <meta charset="UTF-8" />
 <title>Web Playground</title>
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+
+<meta name="viewport"
+  content="width=device-width,
+  initial-scale=1,
+  maximum-scale=1,
+  viewport-fit=cover" />
 
 <style>
 *{box-sizing:border-box}
+html,body{margin:0;height:100%}
+
 body{
-  margin:0;
   font-family:system-ui;
   background:#0d1117;
   color:#e6edf3;
   display:flex;
   flex-direction:column;
-  height:100vh;
-  transition:background .3s,color .3s;
 }
+
+/* HEADER */
 header{
-  padding:10px 16px;
+  padding:10px 14px;
   border-bottom:1px solid #30363d;
   display:flex;
-  justify-content:space-between;
-  align-items:center;
   flex-wrap:wrap;
+  gap:6px;
+  align-items:center;
+  justify-content:space-between;
 }
+
 button{
-  border:1px solid #30363d;
-  background:#1b222c;
-  color:white;
-  padding:6px 14px;
-  border-radius:6px;
-  cursor:pointer;
-  margin-left:5px;
-}
-button:hover{
-  background:#303a45;
-}
-select, input{
-  padding:6px;
-  border-radius:6px;
   border:1px solid #30363d;
   background:#161b22;
   color:white;
-  margin-right:5px;
+  padding:6px 10px;
+  border-radius:6px;
+  font-size:13px;
 }
+button:hover{background:#303a45}
 
+#status{font-size:12px;opacity:.7}
+
+/* MAIN */
 main{
   flex:1;
   display:flex;
   min-height:0;
 }
+
+/* EDITORS */
 .editorColumn{
-  width:400px;
+  width:380px;
   display:flex;
   flex-direction:column;
   border-right:1px solid #30363d;
 }
+label{
+  font-size:11px;
+  opacity:.6;
+  padding:4px 8px;
+}
 textarea{
   flex:1;
-  background:#161b22;
-  color:white;
   border:none;
   outline:none;
   resize:none;
+  background:#161b22;
+  color:white;
   padding:10px;
   font-family:monospace;
-  font-size:14px;
-  margin-bottom:10px;
+  font-size:13px;
 }
-label{
-  font-size:12px;
-  margin-bottom:4px;
-  opacity:0.65;
-}
+
+/* PREVIEW */
 .preview{
   flex:1;
   display:flex;
@@ -85,42 +88,62 @@ iframe{
   border:none;
   background:white;
 }
-#status{
+
+/* PANELS */
+.panel{
   font-size:12px;
-  opacity:0.7;
-}
-.fullscreen{
-  position:absolute;
-  top:8px;
-  right:8px;
-  z-index:10;
+  padding:8px;
+  border-top:1px solid #30363d;
+  background:#0b0f14;
 }
 
-/* Light mode */
+/* SUGGESTIONS */
+.suggestion{
+  border:1px solid #30363d;
+  border-radius:6px;
+  padding:6px;
+  margin-bottom:6px;
+}
+.suggestion button{
+  margin-top:4px;
+  font-size:12px;
+}
+
+/* FULLSCREEN (Visual fallback for iOS) */
+body.fs header,
+body.fs .editorColumn{
+  display:none;
+}
+body.fs main{
+  flex:1;
+}
+body.fs .preview{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  background:#000;
+}
+
+/* LIGHT */
 body.light{
-  background:#ffffff;
+  background:#fff;
   color:#000;
 }
-body.light textarea{
-  background:#f2f2f2;
-  color:#000;
-}
+body.light textarea,
 body.light button{
-  background:#eaeaea;
+  background:#f2f2f2;
   color:#000;
   border-color:#ccc;
 }
-body.light header{
-  border-bottom-color:#ccc;
-}
-body.light .editorColumn{
-  border-right-color:#ccc;
+body.light header,
+body.light .editorColumn,
+body.light .panel{
+  border-color:#ccc;
 }
 
+/* MOBILE */
 @media(max-width:900px){
-  main{
-    flex-direction:column;
-  }
+  main{flex-direction:column}
   .editorColumn{
     width:100%;
     border-right:none;
@@ -132,201 +155,159 @@ body.light .editorColumn{
 
 <body>
 <header>
-  <div><strong>Web Playground</strong></div>
-
-  <!-- project ui -->
+  <strong>Web Playground</strong>
   <div>
-    <select id="projectsSelect"></select>
-    <input id="newProjectName" placeholder="Project name">
-    <button onclick="newProject()">New</button>
-    <button onclick="deleteProject()">Delete</button>
-
-    <span id="status">Synced</span>
-
-    <button onclick="manualSave()">Save</button>
-    <button onclick="manualLoad()">Load</button>
-    <button onclick="toggleTheme()" id="themeBtn">Light Mode</button>
-    <button onclick="resetDefaults()">Reset</button>
+    <button onclick="run()">Run</button>
+    <button onclick="toggleFullscreen()" id="fsBtn">Fullscreen</button>
+    <span id="status">Ready</span>
   </div>
 </header>
 
 <main>
   <div class="editorColumn">
-    <label>HTML</label>
-    <textarea id="htmlInput"></textarea>
-
-    <label>CSS</label>
-    <textarea id="cssInput"></textarea>
-
-    <label>JavaScript</label>
-    <textarea id="jsInput"></textarea>
+    <label>HTML</label><textarea id="html"></textarea>
+    <label>CSS</label><textarea id="css"></textarea>
+    <label>JavaScript</label><textarea id="js"></textarea>
   </div>
 
-  <div class="preview">
-    <button class="fullscreen" onclick="toggleFullscreen()">Fullscreen</button>
+  <div class="preview" id="previewWrap">
     <iframe id="preview"></iframe>
+    <div class="panel" id="brain"></div>
   </div>
 </main>
 
 <script>
-const htmlInput=document.getElementById("htmlInput");
-const cssInput=document.getElementById("cssInput");
-const jsInput=document.getElementById("jsInput");
-const statusEl=document.getElementById("status");
-const preview=document.getElementById("preview");
-const projectsSelect=document.getElementById("projectsSelect");
-const newProjectName=document.getElementById("newProjectName");
+/* ELEMENTS */
+const htmlI=html, cssI=css, jsI=js
+const preview=document.getElementById("preview")
+const brainEl=document.getElementById("brain")
+const statusEl=document.getElementById("status")
+const fsBtn=document.getElementById("fsBtn")
 
-const DEFAULTS={
-  html:"<h1>Hello</h1>",
-  css:"h1{color:red;}",
-  js:"console.log('hello');"
-};
+/* ───── BRAIN MEMORY ───── */
+const brain = JSON.parse(localStorage.brain || `{
+  "accepts":{},
+  "ignores":{}
+}`)
 
-// ---------- MULTI PROJECT STORAGE ----------
-let currentProject = localStorage.currentProject || "default";
-let allProjects = JSON.parse(localStorage.projects || "{}");
-if(!allProjects[currentProject]) allProjects[currentProject]=DEFAULTS;
-
-function saveProjects(){
-  localStorage.projects = JSON.stringify(allProjects);
+function saveBrain(){
+  localStorage.brain = JSON.stringify(brain)
 }
 
-function refreshDropdown(){
-  projectsSelect.innerHTML="";
-  Object.keys(allProjects).forEach(name=>{
-    const opt=document.createElement("option");
-    opt.value=name;
-    opt.textContent=name;
-    if(name===currentProject) opt.selected=true;
-    projectsSelect.appendChild(opt);
-  });
+/* ───── RUN ───── */
+function run(){
+  preview.srcdoc=`
+<!DOCTYPE html>
+<html>
+<head><style>${cssI.value}</style></head>
+<body>
+${htmlI.value}
+<script>
+${jsI.value.replace(/<\/script/ig,"<\\/script")}
+<\/script>
+</body>
+</html>`
+  analyze()
+  statusEl.textContent="Synced"
 }
 
-function setProject(name){
-  currentProject=name;
-  localStorage.currentProject=name;
-  loadProject();
-  refreshDropdown();
-}
-
-function loadProject(){
-  const f=allProjects[currentProject]||DEFAULTS;
-  htmlInput.value=f.html;
-  cssInput.value=f.css;
-  jsInput.value=f.js;
-  update();
-}
-
-// create new
-function newProject(){
-  const name=newProjectName.value.trim();
-  if(!name) return alert("Enter a name");
-  if(allProjects[name]) return alert("Already exists");
-
-  allProjects[name]=DEFAULTS;
-  saveProjects();
-  setProject(name);
-}
-
-// delete
-function deleteProject(){
-  const name=projectsSelect.value;
-  delete allProjects[name];
-  saveProjects();
-  alert("Deleted! Reloading list.");
-  // choose another
-  const keys=Object.keys(allProjects);
-  currentProject = keys[0] || "default";
-  if(!allProjects[currentProject]) allProjects[currentProject]=DEFAULTS;
-  saveProjects();
-  setProject(currentProject);
-}
-
-// handle dropdown switch
-projectsSelect.addEventListener("change",()=>{
-  setProject(projectsSelect.value);
-});
-
-//------------- BASIC SAVE -------------
-function save(){
-  allProjects[currentProject]={
-    html:htmlInput.value,
-    css:cssInput.value,
-    js:jsInput.value
-  };
-  saveProjects();
-}
-
-// Manual save/load
-function manualSave(){
-  save();
-  statusEl.textContent="Saved!";
-}
-function manualLoad(){
-  loadProject();
-  statusEl.textContent="Loaded!";
-}
-
-//------------- update preview ------------
-function update(){
-  statusEl.textContent="Updating…";
-  const html=htmlInput.value;
-  const css=cssInput.value;
-  const js=jsInput.value.replace(/<\/script/ig,"<\\/script");
-
-  preview.srcdoc=`<!DOCTYPE html>
-  <html><head><style>${css}</style></head>
-  <body>${html}<script>${js}<\/script></body></html>`;
-
-  setTimeout(()=>statusEl.textContent="Synced",100);
-  save();
-}
-
-//------------- Reset ------------------
-function resetDefaults(){
-  allProjects[currentProject]=DEFAULTS;
-  saveProjects();
-  loadProject();
-}
-
-//-------------- Fullscreen -------------
+/* ───── FULLSCREEN (SMART) ───── */
 function toggleFullscreen(){
-  preview.requestFullscreen();
-}
+  const root=document.documentElement
 
-//-------------- Theme -----------------
-function toggleTheme(){
-  const light=!document.body.classList.contains("light");
-  document.body.classList.toggle("light",light);
-  localStorage.theme=light?"light":"dark";
-  themeBtn.textContent=light?"Dark Mode":"Light Mode";
-}
-if(localStorage.theme==="light"){
-  document.body.classList.add("light");
-  themeBtn.textContent="Dark Mode";
-}
-
-//-------------- typing delay ---------
-[htmlInput,cssInput,jsInput].forEach(el=>
-  el.addEventListener("input",()=>{
-    statusEl.textContent="Typing…";
-    clearTimeout(window.upTimer);
-    window.upTimer=setTimeout(update,300);
-  })
-);
-
-//-------------- Ctrl+S ---------------
-document.addEventListener("keydown",e=>{
-  if((e.ctrlKey||e.metaKey)&&e.key==="s"){
-    e.preventDefault();
-    manualSave();
+  // Try real fullscreen
+  if(!document.fullscreenElement && root.requestFullscreen){
+    root.requestFullscreen().catch(()=>{})
+    document.body.classList.add("fs")
+    fsBtn.textContent="Exit"
   }
-});
+  else if(document.fullscreenElement){
+    document.exitFullscreen()
+    document.body.classList.remove("fs")
+    fsBtn.textContent="Fullscreen"
+  }
+  // iOS fallback
+  else{
+    document.body.classList.toggle("fs")
+    fsBtn.textContent=
+      document.body.classList.contains("fs")?"Exit":"Fullscreen"
+  }
+}
 
-// INIT
-refreshDropdown();
-loadProject();
+/* Keep state synced if user exits via system gesture */
+document.addEventListener("fullscreenchange",()=>{
+  const active=!!document.fullscreenElement
+  document.body.classList.toggle("fs",active)
+  fsBtn.textContent=active?"Exit":"Fullscreen"
+})
+
+/* ───── ANALYSIS & SUGGESTIONS ───── */
+function analyze(){
+  brainEl.innerHTML=""
+  const suggestions=[]
+  const score = k => (brain.accepts[k]||0)-(brain.ignores[k]||0)
+
+  function suggest(key,text,apply){
+    suggestions.push({key,text,apply,weight:score(key)})
+  }
+
+  if(htmlI.value && !htmlI.value.includes("viewport")){
+    suggest("viewport","Add mobile viewport meta",()=>{
+      htmlI.value=`<meta name="viewport" content="width=device-width, initial-scale=1">\n`+htmlI.value
+    })
+  }
+
+  if(jsI.value && !jsI.value.includes("DOMContentLoaded")){
+    suggest("domready","Wrap JS in DOMContentLoaded",()=>{
+      jsI.value=`document.addEventListener("DOMContentLoaded",()=>{\n${jsI.value}\n});`
+    })
+  }
+
+  if(!suggestions.length){
+    brainEl.textContent="🧠 No suggestions right now"
+    return
+  }
+
+  suggestions
+    .sort((a,b)=>b.weight-a.weight)
+    .forEach(s=>{
+      const div=document.createElement("div")
+      div.className="suggestion"
+      div.innerHTML=`${s.text}<br>`
+
+      const apply=document.createElement("button")
+      apply.textContent="Apply"
+      apply.onclick=()=>{
+        brain.accepts[s.key]=(brain.accepts[s.key]||0)+1
+        saveBrain()
+        s.apply()
+        run()
+      }
+
+      const ignore=document.createElement("button")
+      ignore.textContent="Ignore"
+      ignore.style.marginLeft="6px"
+      ignore.onclick=()=>{
+        brain.ignores[s.key]=(brain.ignores[s.key]||0)+1
+        saveBrain()
+        analyze()
+      }
+
+      div.appendChild(apply)
+      div.appendChild(ignore)
+      brainEl.appendChild(div)
+    })
+}
+
+/* INPUT */
+let t
+;[htmlI,cssI,jsI].forEach(el=>el.oninput=()=>{
+  statusEl.textContent="Typing…"
+  clearTimeout(t)
+  t=setTimeout(run,300)
+})
+
+run()
 </script>
 </body>
 </html>
