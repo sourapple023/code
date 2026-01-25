@@ -58,6 +58,7 @@ main{
   display:flex;
   flex-direction:column;
   border-right:1px solid #30363d;
+  position:relative;
 }
 label{
   font-size:11px;
@@ -74,6 +75,22 @@ textarea{
   padding:10px;
   font-family:monospace;
   font-size:13px;
+  position:relative;
+  z-index:1;
+}
+
+/* 👻 Ghost suggestion */
+.ghost{
+  position:absolute;
+  left:10px;
+  right:10px;
+  bottom:10px;
+  color:#6b7280;
+  font-family:monospace;
+  font-size:13px;
+  pointer-events:none;
+  white-space:pre-wrap;
+  opacity:.45;
 }
 
 /* PREVIEW */
@@ -109,36 +126,16 @@ iframe{
   font-size:12px;
 }
 
-/* FULLSCREEN (Visual fallback for iOS) */
+/* FULLSCREEN */
 body.fs header,
 body.fs .editorColumn{
   display:none;
-}
-body.fs main{
-  flex:1;
 }
 body.fs .preview{
   position:fixed;
   inset:0;
   z-index:9999;
   background:#000;
-}
-
-/* LIGHT */
-body.light{
-  background:#fff;
-  color:#000;
-}
-body.light textarea,
-body.light button{
-  background:#f2f2f2;
-  color:#000;
-  border-color:#ccc;
-}
-body.light header,
-body.light .editorColumn,
-body.light .panel{
-  border-color:#ccc;
 }
 
 /* MOBILE */
@@ -159,18 +156,25 @@ body.light .panel{
   <div>
     <button onclick="run()">Run</button>
     <button onclick="toggleFullscreen()" id="fsBtn">Fullscreen</button>
+    <button onclick="acceptGhost()">👻 Ghost</button>
     <span id="status">Ready</span>
   </div>
 </header>
 
 <main>
   <div class="editorColumn">
-    <label>HTML</label><textarea id="html"></textarea>
-    <label>CSS</label><textarea id="css"></textarea>
-    <label>JavaScript</label><textarea id="js"></textarea>
+    <label>HTML</label>
+    <textarea id="html"></textarea>
+    <div class="ghost" id="ghost"></div>
+
+    <label>CSS</label>
+    <textarea id="css"></textarea>
+
+    <label>JavaScript</label>
+    <textarea id="js"></textarea>
   </div>
 
-  <div class="preview" id="previewWrap">
+  <div class="preview">
     <iframe id="preview"></iframe>
     <div class="panel" id="brain"></div>
   </div>
@@ -181,20 +185,15 @@ body.light .panel{
 const htmlI=html, cssI=css, jsI=js
 const preview=document.getElementById("preview")
 const brainEl=document.getElementById("brain")
-const statusEl=document.getElementById("status")
+const ghostEl=document.getElementById("ghost")
 const fsBtn=document.getElementById("fsBtn")
+const statusEl=document.getElementById("status")
 
-/* ───── BRAIN MEMORY ───── */
-const brain = JSON.parse(localStorage.brain || `{
-  "accepts":{},
-  "ignores":{}
-}`)
+/* BRAIN MEMORY */
+const brain = JSON.parse(localStorage.brain || `{"accepts":{},"ignores":{}}`)
+const saveBrain=()=>localStorage.brain=JSON.stringify(brain)
 
-function saveBrain(){
-  localStorage.brain = JSON.stringify(brain)
-}
-
-/* ───── RUN ───── */
+/* RUN */
 function run(){
   preview.srcdoc=`
 <!DOCTYPE html>
@@ -211,93 +210,94 @@ ${jsI.value.replace(/<\/script/ig,"<\\/script")}
   statusEl.textContent="Synced"
 }
 
-/* ───── FULLSCREEN (SMART) ───── */
+/* FULLSCREEN TOGGLE (HARD SAFE) */
 function toggleFullscreen(){
-  const root=document.documentElement
+  const fsActive = document.fullscreenElement || document.body.classList.contains("fs")
 
-  // Try real fullscreen
-  if(!document.fullscreenElement && root.requestFullscreen){
-    root.requestFullscreen().catch(()=>{})
+  if(!fsActive){
     document.body.classList.add("fs")
+    document.documentElement.requestFullscreen?.().catch(()=>{})
     fsBtn.textContent="Exit"
-  }
-  else if(document.fullscreenElement){
-    document.exitFullscreen()
+  }else{
+    document.exitFullscreen?.()
     document.body.classList.remove("fs")
     fsBtn.textContent="Fullscreen"
   }
-  // iOS fallback
-  else{
-    document.body.classList.toggle("fs")
-    fsBtn.textContent=
-      document.body.classList.contains("fs")?"Exit":"Fullscreen"
-  }
 }
-
-/* Keep state synced if user exits via system gesture */
 document.addEventListener("fullscreenchange",()=>{
-  const active=!!document.fullscreenElement
-  document.body.classList.toggle("fs",active)
-  fsBtn.textContent=active?"Exit":"Fullscreen"
+  const on=!!document.fullscreenElement
+  document.body.classList.toggle("fs",on)
+  fsBtn.textContent=on?"Exit":"Fullscreen"
 })
 
-/* ───── ANALYSIS & SUGGESTIONS ───── */
+/* ANALYZE + GHOST */
+let currentGhost=null
+
 function analyze(){
   brainEl.innerHTML=""
-  const suggestions=[]
-  const score = k => (brain.accepts[k]||0)-(brain.ignores[k]||0)
+  ghostEl.textContent=""
+  currentGhost=null
 
-  function suggest(key,text,apply){
-    suggestions.push({key,text,apply,weight:score(key)})
-  }
+  const suggestions=[]
+
+  const score=k=>(brain.accepts[k]||0)-(brain.ignores[k]||0)
+  const suggest=(key,text,apply)=>suggestions.push({key,text,apply,weight:score(key)})
 
   if(htmlI.value && !htmlI.value.includes("viewport")){
-    suggest("viewport","Add mobile viewport meta",()=>{
+    suggest("viewport","<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">",()=>{
       htmlI.value=`<meta name="viewport" content="width=device-width, initial-scale=1">\n`+htmlI.value
     })
   }
 
   if(jsI.value && !jsI.value.includes("DOMContentLoaded")){
-    suggest("domready","Wrap JS in DOMContentLoaded",()=>{
+    suggest("domready","document.addEventListener(\"DOMContentLoaded\",()=>{ … })",()=>{
       jsI.value=`document.addEventListener("DOMContentLoaded",()=>{\n${jsI.value}\n});`
     })
   }
 
   if(!suggestions.length){
-    brainEl.textContent="🧠 No suggestions right now"
+    brainEl.textContent="🧠 No suggestions"
     return
   }
 
-  suggestions
-    .sort((a,b)=>b.weight-a.weight)
-    .forEach(s=>{
-      const div=document.createElement("div")
-      div.className="suggestion"
-      div.innerHTML=`${s.text}<br>`
+  suggestions.sort((a,b)=>b.weight-a.weight)
+  const top=suggestions[0]
+  currentGhost=top
+  ghostEl.textContent=top.text
 
-      const apply=document.createElement("button")
-      apply.textContent="Apply"
-      apply.onclick=()=>{
-        brain.accepts[s.key]=(brain.accepts[s.key]||0)+1
-        saveBrain()
-        s.apply()
-        run()
-      }
-
-      const ignore=document.createElement("button")
-      ignore.textContent="Ignore"
-      ignore.style.marginLeft="6px"
-      ignore.onclick=()=>{
-        brain.ignores[s.key]=(brain.ignores[s.key]||0)+1
-        saveBrain()
-        analyze()
-      }
-
-      div.appendChild(apply)
-      div.appendChild(ignore)
-      brainEl.appendChild(div)
-    })
+  suggestions.forEach(s=>{
+    const div=document.createElement("div")
+    div.className="suggestion"
+    div.innerHTML=s.text+"<br>"
+    const a=document.createElement("button")
+    a.textContent="Apply"
+    a.onclick=()=>{
+      brain.accepts[s.key]=(brain.accepts[s.key]||0)+1
+      saveBrain()
+      s.apply()
+      run()
+    }
+    div.appendChild(a)
+    brainEl.appendChild(div)
+  })
 }
+
+/* ACCEPT GHOST */
+function acceptGhost(){
+  if(!currentGhost) return
+  brain.accepts[currentGhost.key]=(brain.accepts[currentGhost.key]||0)+1
+  saveBrain()
+  currentGhost.apply()
+  run()
+}
+
+/* TAB ACCEPT (DESKTOP) */
+htmlI.addEventListener("keydown",e=>{
+  if(e.key==="Tab" && currentGhost){
+    e.preventDefault()
+    acceptGhost()
+  }
+})
 
 /* INPUT */
 let t
