@@ -1,305 +1,306 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Web Playground</title>
-
-<meta name="viewport"
-  content="width=device-width,
-  initial-scale=1,
-  maximum-scale=1,
-  viewport-fit=cover" />
+<meta charset="UTF-8">
+<title>OMNI HTML Reader</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-*{box-sizing:border-box}
-html,body{margin:0;height:100%}
-
-body{
-  font-family:system-ui;
-  background:#0d1117;
-  color:#e6edf3;
-  display:flex;
-  flex-direction:column;
+:root{
+  --bg:#0b0b0d;
+  --fg:#eaeaea;
+  --muted:#777;
+  --accent:#00f5ff;
+  --panel:#111;
+  --line:rgba(255,255,255,.08);
 }
+
+[data-theme="light"]{
+  --bg:#ffffff;
+  --fg:#0b0b0d;
+  --muted:#666;
+  --accent:#0066ff;
+  --panel:#f6f7f8;
+  --line:rgba(0,0,0,.1);
+}
+
+*{box-sizing:border-box}
+
+html,body{
+  margin:0;height:100%;
+  background:var(--bg);
+  color:var(--fg);
+  font-family:system-ui;
+}
+
+body{display:flex;flex-direction:column}
 
 /* HEADER */
 header{
   padding:10px 14px;
-  border-bottom:1px solid #30363d;
+  border-bottom:1px solid var(--line);
   display:flex;
-  flex-wrap:wrap;
-  gap:6px;
+  gap:8px;
   align-items:center;
-  justify-content:space-between;
 }
 
-button,input{
-  border:1px solid #30363d;
-  background:#161b22;
-  color:white;
+button{
+  background:transparent;
+  color:var(--fg);
+  border:1px solid var(--line);
   padding:6px 10px;
-  border-radius:6px;
-  font-size:13px;
+  border-radius:10px;
+  cursor:pointer;
 }
-button:hover{background:#303a45}
+button:hover{
+  color:var(--accent);
+  border-color:var(--accent);
+}
 
-#status{font-size:12px;opacity:.7}
+#status{
+  margin-left:auto;
+  font-size:12px;
+  color:var(--muted);
+}
 
 /* MAIN */
 main{
   flex:1;
   display:flex;
   min-height:0;
-  position:relative;
+}
+
+/* FILE LIST */
+#files{
+  width:200px;
+  background:var(--panel);
+  border-right:1px solid var(--line);
+  overflow:auto;
+}
+.file{
+  padding:10px 12px;
+  cursor:pointer;
+  border-bottom:1px solid var(--line);
+}
+.file.active{
+  background:rgba(0,245,255,.12);
+  color:var(--accent);
 }
 
 /* EDITOR */
-.editorColumn{
-  display:flex;
-  flex-direction:column;
-  border-right:1px solid #30363d;
-  position:relative;
+#editor{
+  width:40%;
   min-width:280px;
+  display:flex;
+  border-right:1px solid var(--line);
 }
-label{
-  font-size:11px;
-  opacity:.6;
-  padding:4px 8px;
+
+#lineNumbers{
+  width:44px;
+  padding:10px 6px;
+  background:rgba(255,255,255,.04);
+  color:var(--muted);
+  text-align:right;
+  font-family:ui-monospace,SFMono-Regular,Menlo;
+  font-size:13px;
+  line-height:1.45;
+  overflow:hidden;
 }
+
 textarea{
   flex:1;
   border:none;
   outline:none;
   resize:none;
-  background:#161b22;
-  color:white;
-  padding:12px;
-  font-family:monospace;
-  font-size:14px;
+  background:var(--panel);
+  color:var(--fg);
+  padding:10px;
+  font-size:13px;
+  line-height:1.45;
+  font-family:ui-monospace,SFMono-Regular,Menlo;
 }
-
-/* 👻 Ghost */
-.ghost{
-  position:absolute;
-  left:12px;
-  right:12px;
-  bottom:12px;
-  color:#6b7280;
-  font-family:monospace;
-  font-size:14px;
-  pointer-events:none;
-  white-space:pre-wrap;
-  opacity:.45;
-  display:none;
-}
-
-/* DIVIDER */
-.divider{
-  width:6px;
-  cursor:col-resize;
-  background:#0b0f14;
-  border-left:1px solid #30363d;
-  border-right:1px solid #30363d;
-}
-.divider:hover{background:#30363d}
 
 /* PREVIEW */
-.preview{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  min-width:240px;
-}
+#previewWrap{flex:1}
 iframe{
-  flex:1;
+  width:100%;
+  height:100%;
   border:none;
-  background:white;
+  background:var(--bg);
 }
 
-/* PANELS */
-.panel{
+/* FOOTER */
+footer{
+  padding:8px 14px;
   font-size:12px;
-  padding:8px;
-  border-top:1px solid #30363d;
-  background:#0b0f14;
+  color:var(--muted);
+  border-top:1px solid var(--line);
+  display:flex;
+  justify-content:space-between;
 }
 
-/* FULLSCREEN PREVIEW */
-body.fs header,
-body.fs .editorColumn,
-body.fs .divider{
-  display:none;
-}
-body.fs .preview{
-  position:fixed;
-  inset:0;
-  z-index:9999;
-  background:#000;
-}
-
-/* FULLSCREEN EDITOR */
-body.efs header,
-body.efs .preview,
-body.efs .divider{
-  display:none;
-}
-body.efs .editorColumn{
-  position:fixed;
-  inset:0;
-  z-index:9999;
-  border:none;
-}
-
-/* FLOATING EXIT */
-.fs-exit{
-  position:fixed;
-  bottom:16px;
-  right:16px;
-  z-index:10000;
-  padding:10px 16px;
-  border-radius:999px;
-  font-size:14px;
-  display:none;
-}
-body.fs .fs-exit,
-body.efs .fs-exit{
-  display:block;
-}
-
-/* MOBILE */
 @media(max-width:900px){
   main{flex-direction:column}
-  .divider{display:none}
-  .editorColumn{
-    border-right:none;
-    border-bottom:1px solid #30363d;
-  }
+  #files{width:100%;display:flex}
+  .file{flex:1}
+  #editor{width:100%;height:40%}
 }
 </style>
 </head>
 
-<body>
+<body data-theme="dark">
+
 <header>
-  <strong>Web Playground</strong>
-  <div>
-    <button onclick="run()">Run</button>
-    <button onclick="togglePreviewFS()">Preview FS</button>
-    <button onclick="toggleEditorFS()">Editor FS</button>
-    <span id="status">Ready</span>
-  </div>
+  <strong>OMNI HTML Reader</strong>
+  <button onclick="newFile()">New</button>
+  <button onclick="renameFile()">Rename</button>
+  <button onclick="deleteFile()">Delete</button>
+  <button onclick="toggleTheme()">Theme</button>
+  <span id="status"></span>
 </header>
 
 <main>
-  <div class="editorColumn" id="editor">
-    <label>HTML Document</label>
-    <textarea id="doc"></textarea>
-    <div class="ghost" id="ghost"></div>
-  </div>
+  <aside id="files"></aside>
 
-  <div class="divider" id="divider"></div>
+  <section id="editor">
+    <div id="lineNumbers"></div>
+    <textarea id="input" spellcheck="false"></textarea>
+  </section>
 
-  <div class="preview">
-    <iframe id="preview"></iframe>
-    <div class="panel">🧠 ready</div>
-  </div>
+  <section id="previewWrap">
+    <iframe id="preview" sandbox="allow-same-origin"></iframe>
+  </section>
 </main>
 
-<button class="fs-exit" onclick="exitFullscreen()">Exit Fullscreen</button>
+<footer>
+  <span>Multi-file · Line numbers · HTML reader</span>
+  <span id="chars">0 chars</span>
+</footer>
 
 <script>
-/* ───── ELEMENTS ───── */
-const docI = document.getElementById("doc")
-const preview = document.getElementById("preview")
-const editor = document.getElementById("editor")
-const divider = document.getElementById("divider")
-const statusEl = document.getElementById("status")
+const FILES_KEY='omni_html_files'
+const ACTIVE_KEY='omni_html_active'
+const THEME_KEY='omni_html_theme'
 
-/* ───── DRAG DIVIDER ───── */
-let dragging=false
-divider.addEventListener("pointerdown",e=>{
-  dragging=true
-  divider.setPointerCapture(e.pointerId)
-})
-window.addEventListener("pointermove",e=>{
-  if(!dragging) return
-  const min=280
-  const max=window.innerWidth-240
-  const w=Math.min(max,Math.max(min,e.clientX))
-  editor.style.flex=`0 0 ${w}px`
-})
-window.addEventListener("pointerup",()=>dragging=false)
+let files=JSON.parse(localStorage.getItem(FILES_KEY)||'{}')
+let active=localStorage.getItem(ACTIVE_KEY)
 
-/* ───── FULLSCREEN MODES ───── */
-function togglePreviewFS(){
-  document.body.classList.toggle("fs")
-  document.body.classList.remove("efs")
-}
-function toggleEditorFS(){
-  document.body.classList.toggle("efs")
-  document.body.classList.remove("fs")
-}
-function exitFullscreen(){
-  document.body.classList.remove("fs","efs")
-}
+const fileList=document.getElementById('files')
+const input=document.getElementById('input')
+const preview=document.getElementById('preview')
+const lines=document.getElementById('lineNumbers')
+const chars=document.getElementById('chars')
+const status=document.getElementById('status')
 
-/* ESC EXIT (desktop) */
-window.addEventListener("keydown",e=>{
-  if(e.key==="Escape") exitFullscreen()
+if(!Object.keys(files).length){
+  files['index.html']=sampleHTML()
+  active='index.html'
+  saveAll()
+}
+if(!files[active]) active=Object.keys(files)[0]
+
+renderFiles()
+load()
+
+input.addEventListener('input',()=>{
+  files[active]=input.value
+  preview.srcdoc=input.value
+  updateLines()
+  chars.textContent=input.value.length+' chars'
+  autoSave()
 })
 
-/* ───── SWIPE DOWN TO EXIT (MOBILE) ───── */
-let touchStartY=null
-let touchStartX=null
-
-window.addEventListener("touchstart",e=>{
-  if(!document.body.classList.contains("fs") &&
-     !document.body.classList.contains("efs")) return
-
-  const t=e.touches[0]
-  touchStartY=t.clientY
-  touchStartX=t.clientX
-},{passive:true})
-
-window.addEventListener("touchmove",e=>{
-  if(touchStartY===null) return
-
-  const t=e.touches[0]
-  const dy=t.clientY-touchStartY
-  const dx=Math.abs(t.clientX-touchStartX)
-
-  // Require mostly vertical swipe
-  if(dy>120 && dx<60){
-    exitFullscreen()
-    touchStartY=null
-    touchStartX=null
-  }
-},{passive:true})
-
-window.addEventListener("touchend",()=>{
-  touchStartY=null
-  touchStartX=null
+input.addEventListener('scroll',()=>{
+  lines.scrollTop=input.scrollTop
 })
 
-/* ───── RUN ───── */
-function run(){
-  let html=docI.value
-  if(!/<!doctype/i.test(html)){
-    html=`<!DOCTYPE html>\n${html}`
-  }
-  preview.srcdoc=html
-  statusEl.textContent="Synced"
+function updateLines(){
+  const count=input.value.split('\n').length
+  lines.innerHTML=Array.from({length:count},(_,i)=>i+1).join('<br>')
 }
 
-/* AUTORUN */
+/* FILE MANAGEMENT */
+function renderFiles(){
+  fileList.innerHTML=''
+  Object.keys(files).forEach(f=>{
+    const d=document.createElement('div')
+    d.className='file'+(f===active?' active':'')
+    d.textContent=f
+    d.onclick=()=>switchFile(f)
+    fileList.appendChild(d)
+  })
+}
+
+function switchFile(f){
+  active=f
+  load()
+  renderFiles()
+}
+
+function load(){
+  input.value=files[active]
+  preview.srcdoc=input.value
+  updateLines()
+  chars.textContent=input.value.length+' chars'
+  localStorage.setItem(ACTIVE_KEY,active)
+}
+
+function newFile(){
+  const n=prompt('File name','page.html')
+  if(!n||files[n])return
+  files[n]=''
+  active=n
+  saveAll()
+  renderFiles()
+  load()
+}
+
+function renameFile(){
+  const n=prompt('Rename file',active)
+  if(!n||files[n])return
+  files[n]=files[active]
+  delete files[active]
+  active=n
+  saveAll()
+  renderFiles()
+}
+
+function deleteFile(){
+  if(!confirm('Delete '+active+'?'))return
+  delete files[active]
+  active=Object.keys(files)[0]||''
+  saveAll()
+  renderFiles()
+  load()
+}
+
+/* SAVE */
 let t
-docI.oninput=()=>{
-  statusEl.textContent="Typing…"
+function autoSave(){
   clearTimeout(t)
-  t=setTimeout(run,300)
+  t=setTimeout(saveAll,400)
 }
 
-/* INIT */
-run()
+function saveAll(){
+  localStorage.setItem(FILES_KEY,JSON.stringify(files))
+  localStorage.setItem(ACTIVE_KEY,active)
+  status.textContent='Saved'
+  setTimeout(()=>status.textContent='',700)
+}
+
+/* THEME */
+function toggleTheme(){
+  const t=document.body.dataset.theme==='dark'?'light':'dark'
+  document.body.dataset.theme=t
+  localStorage.setItem(THEME_KEY,t)
+}
+const t0=localStorage.getItem(THEME_KEY)
+if(t0)document.body.dataset.theme=t0
+
+function sampleHTML(){
+return ``
+}
 </script>
+
 </body>
 </html>
