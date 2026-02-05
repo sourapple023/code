@@ -1,342 +1,305 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>OMNI HTML Reader v5</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8" />
+<title>Web Playground</title>
+
+<meta name="viewport"
+  content="width=device-width,
+  initial-scale=1,
+  maximum-scale=1,
+  viewport-fit=cover" />
 
 <style>
-:root{
-  --bg:#0b0b0d;
-  --fg:#eaeaea;
-  --muted:#777;
-  --accent:#00f5ff;
-  --panel:#111;
-  --line:rgba(255,255,255,.08);
-}
-
-[data-theme="light"]{
-  --bg:#fff;
-  --fg:#0b0b0d;
-  --muted:#666;
-  --accent:#0066ff;
-  --panel:#f6f7f8;
-  --line:rgba(0,0,0,.1);
-}
-
 *{box-sizing:border-box}
+html,body{margin:0;height:100%}
 
-html,body{
-  margin:0;height:100%;
-  background:var(--bg);
-  color:var(--fg);
+body{
   font-family:system-ui;
+  background:#0d1117;
+  color:#e6edf3;
+  display:flex;
+  flex-direction:column;
 }
-
-body{display:flex;flex-direction:column}
 
 /* HEADER */
 header{
   padding:10px 14px;
-  border-bottom:1px solid var(--line);
+  border-bottom:1px solid #30363d;
   display:flex;
-  gap:8px;
+  flex-wrap:wrap;
+  gap:6px;
   align-items:center;
+  justify-content:space-between;
 }
 
-input[type="search"]{
-  background:var(--panel);
-  border:1px solid var(--line);
-  color:var(--fg);
+button,input{
+  border:1px solid #30363d;
+  background:#161b22;
+  color:white;
   padding:6px 10px;
-  border-radius:10px;
-  width:200px;
+  border-radius:6px;
+  font-size:13px;
 }
+button:hover{background:#303a45}
 
-button{
-  background:transparent;
-  color:var(--fg);
-  border:1px solid var(--line);
-  padding:6px 10px;
-  border-radius:10px;
-  cursor:pointer;
-}
-button:hover{color:var(--accent);border-color:var(--accent)}
-
-#status{margin-left:auto;font-size:12px;color:var(--muted)}
+#status{font-size:12px;opacity:.7}
 
 /* MAIN */
 main{
   flex:1;
   display:flex;
   min-height:0;
-}
-
-/* SIDEBAR */
-#sidebar{
-  width:260px;
-  background:var(--panel);
-  border-right:1px solid var(--line);
-  overflow:auto;
-  padding-bottom:40px;
-}
-
-.node{
-  padding:6px 12px;
-  cursor:pointer;
-  user-select:none;
-}
-
-.node.file.active{
-  background:rgba(0,245,255,.12);
-  color:var(--accent);
-}
-
-.node:hover{background:rgba(255,255,255,.05)}
-
-.folder{
-  font-weight:600;
-}
-
-.children{
-  margin-left:12px;
+  position:relative;
 }
 
 /* EDITOR */
-#editor{
-  width:40%;
-  min-width:280px;
+.editorColumn{
   display:flex;
-  border-right:1px solid var(--line);
+  flex-direction:column;
+  border-right:1px solid #30363d;
+  position:relative;
+  min-width:280px;
 }
-
-#lineNumbers{
-  width:44px;
-  padding:10px 6px;
-  background:rgba(255,255,255,.04);
-  color:var(--muted);
-  text-align:right;
-  font-family:ui-monospace;
-  font-size:13px;
-  line-height:1.45;
-  overflow:hidden;
+label{
+  font-size:11px;
+  opacity:.6;
+  padding:4px 8px;
 }
-
 textarea{
   flex:1;
   border:none;
   outline:none;
   resize:none;
-  background:var(--panel);
-  color:var(--fg);
-  padding:10px;
-  font-size:13px;
-  line-height:1.45;
-  font-family:ui-monospace;
+  background:#161b22;
+  color:white;
+  padding:12px;
+  font-family:monospace;
+  font-size:14px;
 }
+
+/* 👻 Ghost */
+.ghost{
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:12px;
+  color:#6b7280;
+  font-family:monospace;
+  font-size:14px;
+  pointer-events:none;
+  white-space:pre-wrap;
+  opacity:.45;
+  display:none;
+}
+
+/* DIVIDER */
+.divider{
+  width:6px;
+  cursor:col-resize;
+  background:#0b0f14;
+  border-left:1px solid #30363d;
+  border-right:1px solid #30363d;
+}
+.divider:hover{background:#30363d}
 
 /* PREVIEW */
-#previewWrap{flex:1}
+.preview{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  min-width:240px;
+}
 iframe{
-  width:100%;
-  height:100%;
+  flex:1;
   border:none;
-  background:var(--bg);
+  background:white;
 }
 
+/* PANELS */
+.panel{
+  font-size:12px;
+  padding:8px;
+  border-top:1px solid #30363d;
+  background:#0b0f14;
+}
+
+/* FULLSCREEN PREVIEW */
+body.fs header,
+body.fs .editorColumn,
+body.fs .divider{
+  display:none;
+}
+body.fs .preview{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  background:#000;
+}
+
+/* FULLSCREEN EDITOR */
+body.efs header,
+body.efs .preview,
+body.efs .divider{
+  display:none;
+}
+body.efs .editorColumn{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  border:none;
+}
+
+/* FLOATING EXIT */
+.fs-exit{
+  position:fixed;
+  bottom:16px;
+  right:16px;
+  z-index:10000;
+  padding:10px 16px;
+  border-radius:999px;
+  font-size:14px;
+  display:none;
+}
+body.fs .fs-exit,
+body.efs .fs-exit{
+  display:block;
+}
+
+/* MOBILE */
 @media(max-width:900px){
   main{flex-direction:column}
-  #sidebar{width:100%;display:flex;flex-wrap:wrap}
-  #editor{width:100%;height:40%}
+  .divider{display:none}
+  .editorColumn{
+    border-right:none;
+    border-bottom:1px solid #30363d;
+  }
 }
 </style>
 </head>
 
-<body data-theme="dark">
-
+<body>
 <header>
-  <strong>OMNI HTML Reader</strong>
-  <input type="search" id="search" placeholder="Search files or content…">
-  <button onclick="newFolder()">+ Folder</button>
-  <button onclick="newFile()">+ File</button>
-  <button onclick="toggleTheme()">Theme</button>
-  <span id="status"></span>
+  <strong>Web Playground</strong>
+  <div>
+    <button onclick="run()">Run</button>
+    <button onclick="togglePreviewFS()">Preview FS</button>
+    <button onclick="toggleEditorFS()">Editor FS</button>
+    <span id="status">Ready</span>
+  </div>
 </header>
 
 <main>
-  <aside id="sidebar"></aside>
+  <div class="editorColumn" id="editor">
+    <label>HTML Document</label>
+    <textarea id="doc"></textarea>
+    <div class="ghost" id="ghost"></div>
+  </div>
 
-  <section id="editor">
-    <div id="lineNumbers"></div>
-    <textarea id="input" spellcheck="false"></textarea>
-  </section>
+  <div class="divider" id="divider"></div>
 
-  <section id="previewWrap">
-    <iframe id="preview" sandbox="allow-same-origin"></iframe>
-  </section>
+  <div class="preview">
+    <iframe id="preview"></iframe>
+    <div class="panel">🧠 ready</div>
+  </div>
 </main>
 
+<button class="fs-exit" onclick="exitFullscreen()">Exit Fullscreen</button>
+
 <script>
-/* STORAGE */
-const KEY='omni_fs'
-const ACTIVE='omni_active'
-const THEME='omni_theme'
+/* ───── ELEMENTS ───── */
+const docI = document.getElementById("doc")
+const preview = document.getElementById("preview")
+const editor = document.getElementById("editor")
+const divider = document.getElementById("divider")
+const statusEl = document.getElementById("status")
 
-let fs=JSON.parse(localStorage.getItem(KEY)||'null')
-let active=localStorage.getItem(ACTIVE)
+/* ───── DRAG DIVIDER ───── */
+let dragging=false
+divider.addEventListener("pointerdown",e=>{
+  dragging=true
+  divider.setPointerCapture(e.pointerId)
+})
+window.addEventListener("pointermove",e=>{
+  if(!dragging) return
+  const min=280
+  const max=window.innerWidth-240
+  const w=Math.min(max,Math.max(min,e.clientX))
+  editor.style.flex=`0 0 ${w}px`
+})
+window.addEventListener("pointerup",()=>dragging=false)
 
-if(!fs){
-  fs={
-    type:'folder',
-    name:'root',
-    open:true,
-    children:[
-      {type:'file',name:'index.html',content:sampleHTML()}
-    ]
+/* ───── FULLSCREEN MODES ───── */
+function togglePreviewFS(){
+  document.body.classList.toggle("fs")
+  document.body.classList.remove("efs")
+}
+function toggleEditorFS(){
+  document.body.classList.toggle("efs")
+  document.body.classList.remove("fs")
+}
+function exitFullscreen(){
+  document.body.classList.remove("fs","efs")
+}
+
+/* ESC EXIT (desktop) */
+window.addEventListener("keydown",e=>{
+  if(e.key==="Escape") exitFullscreen()
+})
+
+/* ───── SWIPE DOWN TO EXIT (MOBILE) ───── */
+let touchStartY=null
+let touchStartX=null
+
+window.addEventListener("touchstart",e=>{
+  if(!document.body.classList.contains("fs") &&
+     !document.body.classList.contains("efs")) return
+
+  const t=e.touches[0]
+  touchStartY=t.clientY
+  touchStartX=t.clientX
+},{passive:true})
+
+window.addEventListener("touchmove",e=>{
+  if(touchStartY===null) return
+
+  const t=e.touches[0]
+  const dy=t.clientY-touchStartY
+  const dx=Math.abs(t.clientX-touchStartX)
+
+  // Require mostly vertical swipe
+  if(dy>120 && dx<60){
+    exitFullscreen()
+    touchStartY=null
+    touchStartX=null
   }
-  active='index.html'
-  save()
-}
+},{passive:true})
 
-const sidebar=document.getElementById('sidebar')
-const input=document.getElementById('input')
-const preview=document.getElementById('preview')
-const lines=document.getElementById('lineNumbers')
-const search=document.getElementById('search')
-const status=document.getElementById('status')
+window.addEventListener("touchend",()=>{
+  touchStartY=null
+  touchStartX=null
+})
 
-/* RENDER TREE */
-function render(node,el,query=''){
-  node.children?.forEach(n=>{
-    if(query && !matchNode(n,query)) return
-
-    const d=document.createElement('div')
-    d.className='node '+n.type
-    d.textContent=(n.type==='folder'?'📁 ':'📄 ')+n.name
-
-    if(n.type==='file' && n.name===active) d.classList.add('active')
-
-    d.onclick=()=>{
-      if(n.type==='folder'){
-        n.open=!n.open
-        save()
-        draw()
-      }else{
-        openFile(n)
-      }
-    }
-    el.appendChild(d)
-
-    if(n.type==='folder' && n.open){
-      const c=document.createElement('div')
-      c.className='children'
-      el.appendChild(c)
-      render(n,c,query)
-    }
-  })
-}
-
-function draw(){
-  sidebar.innerHTML=''
-  render(fs,sidebar,search.value.toLowerCase())
-}
-
-/* SEARCH */
-search.oninput=draw
-function matchNode(n,q){
-  if(n.name.toLowerCase().includes(q)) return true
-  if(n.type==='file' && n.content.toLowerCase().includes(q)) return true
-  if(n.type==='folder') return n.children.some(c=>matchNode(c,q))
-  return false
-}
-
-/* FILE OPS */
-function findFile(name,node=fs){
-  for(const c of node.children){
-    if(c.type==='file' && c.name===name) return c
-    if(c.type==='folder'){
-      const f=findFile(name,c)
-      if(f) return f
-    }
+/* ───── RUN ───── */
+function run(){
+  let html=docI.value
+  if(!/<!doctype/i.test(html)){
+    html=`<!DOCTYPE html>\n${html}`
   }
+  preview.srcdoc=html
+  statusEl.textContent="Synced"
 }
 
-function openFile(f){
-  active=f.name
-  input.value=f.content
-  preview.srcdoc=f.content
-  updateLines()
-  save()
-  draw()
-}
-
-input.oninput=()=>{
-  const f=findFile(active)
-  if(f){
-    f.content=input.value
-    preview.srcdoc=input.value
-    updateLines()
-    autoSave()
-  }
-}
-
-function newFile(){
-  const name=prompt('File name','page.html')
-  if(!name) return
-  fs.children.push({type:'file',name,content:''})
-  save()
-  draw()
-}
-
-function newFolder(){
-  const name=prompt('Folder name','folder')
-  if(!name) return
-  fs.children.push({type:'folder',name,open:true,children:[]})
-  save()
-  draw()
-}
-
-/* LINE NUMBERS */
-input.onscroll=()=>lines.scrollTop=input.scrollTop
-function updateLines(){
-  const n=input.value.split('\n').length
-  lines.innerHTML=Array.from({length:n},(_,i)=>i+1).join('<br>')
-}
-
-/* SAVE */
+/* AUTORUN */
 let t
-function autoSave(){
+docI.oninput=()=>{
+  statusEl.textContent="Typing…"
   clearTimeout(t)
-  t=setTimeout(save,400)
-}
-function save(){
-  localStorage.setItem(KEY,JSON.stringify(fs))
-  localStorage.setItem(ACTIVE,active)
-  status.textContent='Saved'
-  setTimeout(()=>status.textContent='',700)
+  t=setTimeout(run,300)
 }
 
-/* THEME */
-function toggleTheme(){
-  const t=document.body.dataset.theme==='dark'?'light':'dark'
-  document.body.dataset.theme=t
-  localStorage.setItem(THEME,t)
-}
-const th=localStorage.getItem(THEME)
-if(th) document.body.dataset.theme=th
-
-draw()
-
-function sampleHTML(){
-return `<!DOCTYPE html>
-<html>
-<body>
-<h1>OMNI Reader</h1>
-<p>Folders, files, search.</p>
-</body>
-</html>`
-}
+/* INIT */
+run()
 </script>
-
 </body>
 </html>
