@@ -398,17 +398,17 @@ svg {
   // ------------------------------------------
 
   const genAI = new GoogleGenerativeAI(API_KEY);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   const chat = model.startChat({
     history: [
       {
         role: "user",
-        parts: [{ text: "Hello! I am OMNI, powered by Gemini 2.5 Flash. How can I assist you today?" }],
+        parts: [{ text: "Hello! I am OMNI, powered by Gemini 1.5 Flash. How can I assist you today?" }],
       },
       {
         role: "model",
-        parts: [{ text: "Hello! I am OMNI, powered by Gemini 2.5 Flash. How can I assist you today?" }],
+        parts: [{ text: "Hello! I am OMNI, powered by Gemini 1.5 Flash. How can I assist you today?" }],
       }
     ],
     generationConfig: {
