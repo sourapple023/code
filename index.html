@@ -2,31 +2,230 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Gemini 2.5 Flash</title>
+<title>OMNI AI Assistant</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
+/* Base styling from your original SVG */
 html, body {
   width: 100%;
   height: 100%;
   margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Added a modern font */
+  color: #e0e0e0; /* Light text for dark background */
+  background: #000;
+  overflow: hidden; /* To prevent scrollbars from the SVG animation, and keep chat in view */
 }
 
 body {
-  display: grid;
-  place-items: center;
-  background: #000;
-  overflow: hidden;
-  font-family: sans-serif; /* Fallback for accessibility */
+  display: flex; /* Changed to flexbox for better layout control */
+  flex-direction: column; /* Stack SVG and chat vertically */
+  align-items: center; /* Center horizontally */
+  justify-content: center; /* Center vertically */
+  padding: 20px; /* Add some padding around the content */
+  box-sizing: border-box; /* Include padding in element's total width and height */
+  overflow-y: auto; /* Allow scrolling for the entire body if content exceeds viewport */
 }
 
 /* Responsive outer scale remains untouched */
 svg {
   width: min(92vw, 900px);
   height: auto;
-  max-height: 90vh;
-  color: #ffffff; /* Base color for solid fills and inner glows */
+  max-height: 50vh; /* Give space for the chat below */
+  color: #ffffff;
+  margin-bottom: 30px; /* Space between SVG and chat */
 }
+
+/* Chat Interface Styling */
+.chat-container {
+  width: min(95vw, 700px); /* Max width for chat, slightly wider than SVG to give room */
+  display: flex;
+  flex-direction: column;
+  background-color: #1a1a1a; /* Darker background for chat box */
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 245, 255, 0.2); /* Subtle glow related to SVG colors */
+  overflow: hidden;
+  height: min(45vh, 400px); /* Limit chat height */
+  position: relative; /* For loading indicator positioning */
+}
+
+#chat-history {
+  flex-grow: 1;
+  padding: 15px;
+  overflow-y: auto; /* Scrollable chat history */
+  border-bottom: 1px solid #333;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.message {
+  padding: 10px 15px;
+  border-radius: 8px;
+  max-width: 80%;
+  word-wrap: break-word; /* Ensure long words wrap */
+}
+
+.user-message {
+  background-color: #004d40; /* Dark teal for user messages */
+  align-self: flex-end; /* Align to the right */
+  color: #e0f2f1;
+  text-align: right;
+}
+
+.ai-message {
+  background-color: #262626; /* Slightly lighter dark for AI messages */
+  align-self: flex-start; /* Align to the left */
+  color: #cfd8dc;
+  text-align: left;
+}
+
+.chat-input-area {
+  display: flex;
+  padding: 15px;
+  gap: 10px;
+  align-items: center;
+}
+
+#user-input {
+  flex-grow: 1;
+  padding: 12px 15px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background-color: #222;
+  color: #eee;
+  font-size: 1rem;
+  resize: none; /* Disable manual resize */
+  min-height: 40px; /* Ensure input area is visible */
+  max-height: 100px; /* Limit max height before scroll */
+  overflow-y: auto; /* Scroll if text exceeds max height */
+}
+
+#user-input::placeholder {
+  color: #888;
+}
+
+#user-input:focus {
+  outline: none;
+  border-color: #00f5ff; /* Highlight focus with aurora color */
+  box-shadow: 0 0 5px rgba(0, 245, 255, 0.5);
+}
+
+#send-button {
+  padding: 12px 20px;
+  background: linear-gradient(90deg, #00f5ff, #7cff00); /* Aurora gradient for button */
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  min-width: 80px; /* Prevent button from shrinking too much */
+}
+
+#send-button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 245, 255, 0.4);
+}
+
+#send-button:disabled {
+  background: #555;
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+#loading-indicator {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 8px 15px;
+  border-radius: 6px;
+  color: #00f5ff;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10; /* Ensure it's above other elements */
+}
+
+.spinner {
+  border: 3px solid rgba(0, 245, 255, 0.3);
+  border-top: 3px solid #00f5ff;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  color: #ff6347; /* Tomato red for errors */
+  background-color: #331a1a;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* Ensure SVG's aurora gradient animations are not blocked by chat */
+.svg-aurora-glow-container {
+    /* If you wrapped the SVG, this would be its container */
+}
+
+/* Media Queries for smaller screens */
+@media (max-width: 768px) {
+  svg {
+    max-height: 40vh;
+  }
+  .chat-container {
+    height: min(55vh, 400px);
+    width: 95vw;
+  }
+  #send-button {
+    padding: 10px 15px;
+    font-size: 0.9rem;
+  }
+  #user-input {
+    font-size: 0.9rem;
+    padding: 10px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  svg {
+    width: 100vw;
+    max-width: 350px; /* Prevent it from being too wide on very small screens */
+    max-height: 30vh;
+  }
+  .chat-container {
+    height: min(60vh, 350px);
+    width: 98vw;
+    margin-top: 20px;
+  }
+  .chat-input-area {
+    flex-direction: column;
+    padding: 10px;
+    gap: 8px;
+  }
+  #user-input {
+    width: calc(100% - 24px); /* Account for padding */
+    max-height: 80px;
+  }
+  #send-button {
+    width: 100%;
+    margin-top: 5px;
+  }
+}
+
 </style>
 </head>
 
@@ -36,7 +235,7 @@ svg {
   xmlns="http://www.w3.org/2000/svg"
   viewBox="0 0 400 150"
   role="img"
-  aria-label="Gemini 2.5 Flash logo">
+  aria-label="OMNI logo">
 
   <defs>
     <!-- Aurora gradient -->
@@ -69,43 +268,11 @@ svg {
     <filter id="innerGlow">
       <feGaussianBlur stdDeviation="2"/>
     </filter>
-
-    <!-- Define reusable path elements for each character (relative to 0,0) -->
-    <!-- Letters are designed for a base height of 60 units (from y=0 to y=60 for body, dots at y=-10) -->
-    <!-- G (width=50) -->
-    <path id="g-path" d="M50 60 H20 V10 Q20 0 30 0 H50 Q60 0 60 10 V20 H40 V10 Q40 5 35 5 H25 Q20 5 20 10 V50 H40 Z"/>
-    <!-- e (width=40) -->
-    <path id="e-path" d="M40 40 H20 V30 Q20 20 30 20 H40 V30 H20 V40 H40 Z M40 60 H20 V50 Q20 40 30 40 H40 V50 H20 V60 H40 Z"/>
-    <!-- m (width=60) -->
-    <path id="m-path" d="M0 60 V0 H10 V60 H20 V0 H30 V60 H40 V0 H50 V60 Z"/>
-    <!-- i body (width=10) -->
-    <path id="i-body-path" d="M0 60 V0 H10 V60 Z"/>
-    <!-- i dot (relative to i-body's top left) -->
-    <circle id="i-dot-path" cx="5" cy="-10" r="4"/>
-    <!-- n (width=40) -->
-    <path id="n-path" d="M0 60 V0 H10 V60 H20 V0 H30 V60 Z"/>
-    <!-- 2 (width=40) -->
-    <path id="2-path" d="M40 0 H10 Q0 0 0 10 V20 Q0 30 10 30 H30 V40 H0 V50 Q0 60 10 60 H40 V50 H10 V40 H40 V30 H10 V20 H40 Z"/>
-    <!-- . (width=10, dot positioned for baseline) -->
-    <circle id="dot-path" cx="5" cy="50" r="4"/>
-    <!-- 5 (width=40) -->
-    <path id="5-path" d="M40 0 H10 Q0 0 0 10 V20 Q0 30 10 30 H30 V40 H10 Q0 40 0 50 V60 Q0 70 10 70 H40 V60 H20 V50 H40 Z"/>
-
-    <!-- F (width=40) -->
-    <path id="f-path" d="M0 60 V0 H40 V10 H10 V20 H40 V30 H10 V60 Z"/>
-    <!-- l (width=10) -->
-    <path id="l-path" d="M0 60 V0 H10 V60 Z"/>
-    <!-- a (width=40) -->
-    <path id="a-path" d="M40 60 H20 V20 Q20 0 30 0 H40 V10 H30 Q25 10 25 15 V50 H40 Z"/>
-    <!-- s (width=40) -->
-    <path id="s-path" d="M40 60 H10 Q0 60 0 50 V40 Q0 30 10 30 H30 V20 H10 Q0 20 0 10 V0 Q0 -10 10 -10 H40 V0 H10 V10 H40 V20 H10 V30 H40 V40 H10 V50 H40 Z"/>
-    <!-- h (width=40) -->
-    <path id="h-path" d="M0 60 V0 H10 V30 H30 V0 H40 V60 H30 V40 H10 V60 Z"/>
   </defs>
 
-  <!-- Content group: designed for 400x150, then scaled and translated -->
-  <!-- Adjusted translate Y to center two lines of text (approx 130px height designed, scaled to 65px) -->
-  <g transform="translate(100 42.5) scale(0.5)">
+  <!-- 🔽 50% RULE APPLIED HERE -->
+  <!-- Centered scale: (400 * .5 = 200, 150 * .5 = 75) -->
+  <g transform="translate(100 37.5) scale(0.5)">
 
     <!-- Energy stroke -->
     <g
@@ -120,70 +287,200 @@ svg {
         dur="22s"
         repeatCount="indefinite"/>
 
-      <!-- Line 1: Gemini 2.5 (base Y: 20) -->
-      <use href="#g-path" transform="translate(20 20)"/>
-      <use href="#e-path" transform="translate(80 20)"/>
-      <use href="#m-path" transform="translate(130 20)"/>
-      <use href="#i-body-path" transform="translate(200 20)"/>
-      <use href="#i-dot-path" transform="translate(200 20)"/>
-      <use href="#n-path" transform="translate(220 20)"/>
-      <use href="#i-body-path" transform="translate(270 20)"/>
-      <use href="#i-dot-path" transform="translate(270 20)"/>
-      <use href="#2-path" transform="translate(290 20)"/>
-      <use href="#dot-path" transform="translate(340 20)"/>
-      <use href="#5-path" transform="translate(360 20)"/>
+      <!-- O -->
+      <path d="
+        M70 22
+        C44 22 22 44 22 75
+        C22 106 44 128 70 128
+        C96 128 118 106 118 75
+        C118 44 96 22 70 22 Z"/>
 
-      <!-- Line 2: Flash (base Y: 90, shifted horizontally to center) -->
-      <use href="#f-path" transform="translate(95 90)"/>
-      <use href="#l-path" transform="translate(145 90)"/>
-      <use href="#a-path" transform="translate(165 90)"/>
-      <use href="#s-path" transform="translate(215 90)"/>
-      <use href="#h-path" transform="translate(265 90)"/>
+      <!-- M -->
+      <path d="
+        M132 124
+        V38 Q132 26 144 26
+        H148
+        L184 92
+        L220 26
+        H224 Q236 26 236 38
+        V124"/>
+
+      <!-- N -->
+      <path d="
+        M246 124
+        V38 Q246 26 258 26
+        H262
+        L318 114
+        Q322 124 332 124
+        V38 Q332 26 320 26"/>
+
+      <!-- I -->
+      <rect x="350" y="26" width="30" height="98" rx="15"/>
     </g>
 
     <!-- Core forms -->
     <g fill="currentColor">
-      <!-- Line 1: Gemini 2.5 -->
-      <use href="#g-path" transform="translate(20 20)"/>
-      <use href="#e-path" transform="translate(80 20)"/>
-      <use href="#m-path" transform="translate(130 20)"/>
-      <use href="#i-body-path" transform="translate(200 20)"/>
-      <use href="#i-dot-path" transform="translate(200 20)" filter="url(#innerGlow)"/>
-      <use href="#n-path" transform="translate(220 20)"/>
-      <use href="#i-body-path" transform="translate(270 20)"/>
-      <use href="#i-dot-path" transform="translate(270 20)" filter="url(#innerGlow)"/>
-      <use href="#2-path" transform="translate(290 20)"/>
-      <use href="#dot-path" transform="translate(340 20)"/>
-      <use href="#5-path" transform="translate(360 20)"/>
+      <path d="
+        M70 22
+        C44 22 22 44 22 75
+        C22 106 44 128 70 128
+        C96 128 118 106 118 75
+        C118 44 96 22 70 22 Z"/>
 
-      <!-- Line 2: Flash -->
-      <use href="#f-path" transform="translate(95 90)"/>
-      <use href="#l-path" transform="translate(145 90)"/>
-      <use href="#a-path" transform="translate(165 90)"/>
-      <use href="#s-path" transform="translate(215 90)"/>
-      <use href="#h-path" transform="translate(265 90)"/>
-
-      <!-- Rotating effect for the first 'i' dot of Gemini -->
-      <!-- The dot's center in the 'g' coordinate system is (200 + 5, 20 - 10) = (205, 10) -->
       <circle
-        cx="205"
-        cy="10"
-        r="12"
+        cx="70"
+        cy="75"
+        r="22"
+        opacity="0.9"
+        filter="url(#innerGlow)"/>
+
+      <circle
+        cx="70"
+        cy="75"
+        r="34"
         fill="none"
         stroke="currentColor"
         stroke-width="1"
         opacity="0.055">
         <animateTransform
           type="rotate"
-          from="0 205 10"
-          to="360 205 10"
+          from="0 70 75"
+          to="360 70 75"
           dur="90s"
           repeatCount="indefinite"/>
       </circle>
+
+      <path d="
+        M132 124
+        V38 Q132 26 144 26
+        H148
+        L184 92
+        L220 26
+        H224 Q236 26 236 38
+        V124"/>
+
+      <path d="
+        M246 124
+        V38 Q246 26 258 26
+        H262
+        L318 114
+        Q322 124 332 124
+        V38 Q332 26 320 26"/>
+
+      <rect x="350" y="26" width="30" height="98" rx="15"/>
     </g>
 
   </g>
 </svg>
+
+<div class="chat-container">
+  <div id="chat-history">
+    <div class="message ai-message">Hello! I am OMNI, powered by Gemini 1.5 Flash. How can I assist you today?</div>
+  </div>
+  <div class="chat-input-area">
+    <textarea id="user-input" placeholder="Ask OMNI anything..." rows="1"></textarea>
+    <button id="send-button">Send</button>
+  </div>
+  <div id="loading-indicator" style="display:none;">
+    <div class="spinner"></div>
+    Thinking...
+  </div>
+</div>
+
+<!-- Include the Google AI SDK -->
+<script type="module">
+  import { GoogleGenerativeAI } from "https://cdn.jsdelivr.net/npm/@google/generative-ai";
+
+  // --- !!! IMPORTANT SECURITY WARNING !!! ---
+  // Exposing your API key directly in client-side code is HIGHLY INSECURE for production apps.
+  // For production, use a server-side proxy to interact with the Gemini API.
+  const API_KEY = "AIzaSyBPis7L1eyI3AVEK0Tzqe4t55ezd9xT5jc"; // Your provided API key
+  // ------------------------------------------
+
+  const genAI = new GoogleGenerativeAI(API_KEY);
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+  const chat = model.startChat({
+    history: [
+      {
+        role: "user",
+        parts: [{ text: "Hello! I am OMNI, powered by Gemini 2.5 Flash. How can I assist you today?" }],
+      },
+      {
+        role: "model",
+        parts: [{ text: "Hello! I am OMNI, powered by Gemini 2.5 Flash. How can I assist you today?" }],
+      }
+    ],
+    generationConfig: {
+      maxOutputTokens: 800, // Limit response length
+    },
+  });
+
+  const chatHistoryDiv = document.getElementById('chat-history');
+  const userInput = document.getElementById('user-input');
+  const sendButton = document.getElementById('send-button');
+  const loadingIndicator = document.getElementById('loading-indicator');
+
+  // Function to add a message to the chat history
+  function addMessage(text, sender) {
+    const messageDiv = document.createElement('div');
+    messageDiv.classList.add('message', `${sender}-message`);
+    messageDiv.innerText = text;
+    chatHistoryDiv.appendChild(messageDiv);
+    chatHistoryDiv.scrollTop = chatHistoryDiv.scrollHeight; // Scroll to bottom
+  }
+
+  // Function to handle sending messages
+  async function sendMessage() {
+    const message = userInput.value.trim();
+    if (message === "") return;
+
+    addMessage(message, 'user');
+    userInput.value = ''; // Clear input
+    userInput.style.height = 'auto'; // Reset textarea height
+    sendButton.disabled = true;
+    loadingIndicator.style.display = 'flex'; // Show loading indicator
+
+    try {
+      const result = await chat.sendMessage(message);
+      const response = await result.response;
+      const text = response.text();
+      addMessage(text, 'ai');
+    } catch (error) {
+      console.error("Error communicating with Gemini:", error);
+      const errorDiv = document.createElement('div');
+      errorDiv.classList.add('error-message');
+      errorDiv.innerText = `Error: Could not get a response from OMNI. Please try again. (${error.message})`;
+      chatHistoryDiv.appendChild(errorDiv);
+      chatHistoryDiv.scrollTop = chatHistoryDiv.scrollHeight;
+    } finally {
+      sendButton.disabled = false;
+      loadingIndicator.style.display = 'none'; // Hide loading indicator
+    }
+  }
+
+  // Event listeners
+  sendButton.addEventListener('click', sendMessage);
+
+  userInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) { // Send on Enter, allow Shift+Enter for new line
+      event.preventDefault(); // Prevent new line in textarea
+      sendMessage();
+    }
+  });
+
+  // Auto-resize textarea
+  userInput.addEventListener('input', () => {
+    userInput.style.height = 'auto';
+    userInput.style.height = userInput.scrollHeight + 'px';
+  });
+
+  // Initial resize for the placeholder
+  userInput.style.height = userInput.scrollHeight + 'px';
+
+  // Initial message from AI when page loads
+  // The initial AI message is now part of the HTML for better user experience.
+</script>
 
 </body>
 </html>
