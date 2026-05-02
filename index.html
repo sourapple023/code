@@ -1,9 +1,10 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OmniAI - Gemini 1.5 Flash Explorer</title>
+    <title>OmniAI - Gemini 2.5 Flash Explorer (Hypothetical)</title>
     <!-- Favicon (Optional, but good for branding) -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
 
@@ -248,8 +249,8 @@
             word-wrap: break-word;
             white-space: pre-wrap; /* Preserves whitespace and wraps lines */
             position: relative; /* For copy button positioning */
-            tabindex="0" /* already in HTML */
-            aria-label="OmniAI Response Area" /* already in HTML */
+            /* tabindex="0" already in HTML */
+            /* aria-label="OmniAI Response Area" already in HTML */
         }
 
         /* Specific styling for markdown elements within response-area */
@@ -470,8 +471,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>OmniAI - Gemini 1.5 Flash Explorer</h1>
-        <p style="text-align: center; margin-bottom: 25px;">Interact directly with Google's powerful Gemini 1.5 Flash AI model, optimized for fast responses and efficiency.</p>
+        <h1>OmniAI - Gemini 2.5 Flash Explorer (Hypothetical)</h1>
+        <p style="text-align: center; margin-bottom: 25px;">Interact directly with Google's powerful Gemini 2.5 Flash AI model, optimized for fast responses and efficiency. (Note: Gemini 2.5 Flash is a placeholder for a future, hypothetical model, as current versions are 1.5 Flash/Pro.)</p>
 
         <main>
             <section id="api-key-section">
@@ -495,7 +496,7 @@
             </section>
 
             <section id="ai-interaction-section">
-                <h2>Prompt Gemini 1.5 Flash</h2>
+                <h2>Prompt Gemini 2.5 Flash</h2>
                 <label for="promptInput">Your Prompt:</label>
                 <textarea id="promptInput" placeholder="Ask OmniAI anything... e.g., 'Explain quantum computing in simple terms'" aria-required="true"></textarea>
                 <div class="button-group">
@@ -512,14 +513,14 @@
                     <button id="clearResponseButton" disabled aria-label="Clear AI response area">Clear Response</button>
                 </div>
                 <div id="response-area" tabindex="0" aria-label="OmniAI Response Area" role="log" aria-live="polite">
-                    <p>Your AI responses will appear here. The Gemini 1.5 Flash model is designed for high-volume, cost-effective tasks while still offering strong capabilities.</p>
+                    <p>Your AI responses will appear here. The Gemini 2.5 Flash model (hypothetical) is designed for high-volume, cost-effective tasks while still offering strong capabilities.</p>
                 </div>
             </section>
         </main>
     </div>
 
     <footer>
-        <p>Powered by <a href="https://ai.google.dev/models/gemini" target="_blank" rel="noopener noreferrer">Google Gemini 1.5 Flash</a> | Built for <a href="https://omnios.org/" target="_blank" rel="noopener noreferrer">OmniOS</a> (browser-agnostic) | &copy; 2024</p>
+        <p>Powered by <a href="https://ai.google.dev/models/gemini" target="_blank" rel="noopener noreferrer">Google Gemini 2.5 Flash (Hypothetical)</a> | Built for <a href="https://omnios.org/" target="_blank" rel="noopener noreferrer">OmniOS</a> (browser-agnostic) | &copy; 2024</p>
     </footer>
 
     <script>
@@ -544,10 +545,13 @@
             const clearResponseButton = document.getElementById('clearResponseButton');
 
             // --- Constants ---
-            // Using the recommended alias for Gemini 1.5 Flash, matching the title's intent.
-            const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
+            // IMPORTANT: "Gemini 2.5 Flash" is a *hypothetical* model name at the time of this code generation.
+            // Google has not officially released models named "Gemini 2.5".
+            // This implementation assumes a future API endpoint for such a model, based on current naming conventions.
+            // When Gemini 2.5 is actually released, please verify the correct model ID and endpoint.
+            const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-latest:generateContent';
             const LOCAL_STORAGE_KEY = 'geminiApiKey';
-            const INITIAL_RESPONSE_PLACEHOLDER = '<p>Your AI responses will appear here. The Gemini 1.5 Flash model is designed for high-volume, cost-effective tasks while still offering strong capabilities.</p>';
+            const INITIAL_RESPONSE_PLACEHOLDER = '<p>Your AI responses will appear here. The Gemini 2.5 Flash model (hypothetical) is designed for high-volume, cost-effective tasks while still offering strong capabilities.</p>';
 
             let currentApiKey = localStorage.getItem(LOCAL_STORAGE_KEY);
             let isFetching = false; // Prevent multiple concurrent API calls
@@ -764,6 +768,19 @@
                 askGeminiButton.disabled = true; // Re-disable to ensure visual state
 
                 try {
+                    // --- The "Brain Engine" - How OmniAI 'magically' processes your request ---
+                    // In a client-side application like this, the "brain engine" is primarily the powerful
+                    // Gemini 2.5 Flash model itself, accessible via its API.
+                    // This JavaScript code acts as the interface, transforming your prompt into a structured
+                    // request, sending it to Google's highly optimized and intelligent backend,
+                    // and then processing the AI's response for display.
+                    // The "magic" lies in the complexity and capabilities of the large language model (LLM)
+                    // on Google's servers, which handles understanding your request, generating a coherent
+                    // and relevant response, and delivering it back.
+                    // For more advanced "brain engine" features like complex multi-turn conversations,
+                    // external tool integration, or long-term memory, a more sophisticated backend
+                    // server-side component would typically be required to orchestrate these interactions.
+                    // For this simple single-file explorer, the direct API call IS the brain engine.
                     const response = await fetch(`${GEMINI_API_URL}?key=${currentApiKey}`, {
                         method: 'POST',
                         headers: {
@@ -869,3 +886,4 @@
     </script>
 </body>
 </html>
+```
