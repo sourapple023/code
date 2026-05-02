@@ -1,71 +1,122 @@
-html <!DOCTYPE html>      │
-│  <html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0">     │
-│  <title>OMNI-Client: Distributed Intelligence Interface v2026.02</title> <style> /* OMNI OS Terminal Theme */ body {       │
-│  font-family: 'Courier New', monospace; background-color: #0d1117; color: #8aff8a; margin: 20px; } .container {            │
-│  max-width: 800px; margin: auto; padding: 20px; border: 1px solid #363b40; box-shadow: 0 0 10px rgba(138, 255, 138, 0.2);  │
+html     │
+│  <!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width,         │
+│  initial-scale=1.0"> <title>OMNI-Adventure: Dungeon Core v1.0</title> <style> /* OMNI OS Terminal Theme for Game */ body   │
+│  { font-family: 'Courier New', monospace; background-color: #0d1117; color: #8aff8a; margin: 20px; } .container {          │
+│  max-width: 900px; margin: auto; padding: 25px; border: 1px solid #363b40; box-shadow: 0 0 15px rgba(138, 255, 138, 0.2);  │
 │  } h1 { color: #50fa7b; border-bottom: 1px solid #363b40; padding-bottom: 10px; margin-bottom: 20px; } h2 { color:         │
-│  #6272a4; margin-top: 30px; } h3 { color: #ffeb99; margin-top: 20px; } label { display: block; margin-bottom: 5px; color:  │
-│  #ffeb99; } input[type="text"], textarea { width: calc(100% - 22px); padding: 10px; margin-bottom: 15px;                   │
-│  background-color: #1a1e24; border: 1px solid #363b40; color: #f8f8f2; font-family: 'Courier New', monospace; resize:      │
-│  vertical; } button { background-color: #6272a4; color: #f8f8f2; padding: 10px 15px; border: none; cursor: pointer;        │
-│  font-family: 'Courier New', monospace; transition: background-color 0.3s ease; } button:disabled { background-color:      │
-│  #44475a; cursor: not-allowed; } button:hover:not(:disabled) { background-color: #4b5980; } pre { background-color:        │
-│  #1a1e24; border: 1px solid #363b40; padding: 15px; white-space: pre-wrap; word-wrap: break-word; max-height: 400px;       │
-│  overflow-y: auto; } .status { margin-top: 20px; color: #ff6e6e; } .loading::after { content: ' .'; animation: ellipsis    │
-│  1s infinite; } @keyframes ellipsis { 0% { content: '.'; } 33% { content: '..'; } 66% { content: '...'; } 100% { content:  │
-│  '.'; } } </style> </head> <body> <div class="container"> <h1>OMNI-Client: System Interface v2026.02 (Enhanced             │
-│  Resilience)</h1> <p>This client facilitates interaction with distributed cognitive and data systems. Resilience           │
-│  protocols active.</p> <section id="cognitive-unit"> <h2>&gt; Cognitive Processing Unit (AI)</h2> <label                   │
-│  for="brainInput">Enter command for AI:</label> <input type="text" id="brainInput" placeholder="Analyze system logs for    │
-│  anomalies..."> <button id="executeBrainButton" onclick="sendToBrain()">Execute AI Query</button> <h3>&gt; AI Response     │
-│  Output:</h3> <pre id="brainOutput">Awaiting command input...</pre> </section> <section id="backend-unit"                  │
-│  style="margin-top: 30px;"> <h2>&gt; Backend Data Stream</h2> <label for="backendQuery">Enter backend data request (e.g.,  │
-│  /status, /users/123):</label> <input type="text" id="backendQuery" value="/data/status"> <button                          │
-│  id="retrieveBackendDataButton" onclick="fetchBackendData()">Retrieve Data</button> <h3>&gt; Backend Data Output:</h3>     │
-│  <pre id="backendOutput">Awaiting data request...</pre> </section> <p class="status" id="systemStatus">System:             │
-│  Initializing...</p> </div> <script> // --- CONFIGURATION: Define your external API endpoints and resilience parameters    │
-│  --- const SMART_BRAIN_API_ENDPOINT = 'https://api.external-ai-service.com/v1/process'; // Placeholder for AI const        │
-│  FUTUREPROOF_BACKEND_API_ENDPOINT = 'https://api.your-serverless-backend.com'; // Placeholder for Backend // Resilience    │
-│  Parameters for AI interaction const REQUEST_TIMEOUT_MS = 15000; // Client-side timeout for AI requests (15 seconds)       │
-│  const MAX_RETRIES = 2; // Maximum retry attempts after initial failure (0 means no retries) const INITIAL_RETRY_DELAY_MS  │
-│  = 1000; // Initial delay before first retry (1 second) //                                                                 │
-│  ---------------------------------------------------------------------------------- async function sendToBrain(retryCount  │
-│  = 0) { const input = document.getElementById('brainInput').value; const brainOutput =                                     │
-│  document.getElementById('brainOutput'); const systemStatus = document.getElementById('systemStatus'); const               │
-│  executeBrainButton = document.getElementById('executeBrainButton'); if (!input.trim()) { brainOutput.textContent =        │
-│  "ERROR: Input required for AI command. Please provide a query."; return; } // --- UI State Management ---                 │
-│  executeBrainButton.disabled = true; // Disable button to prevent duplicate submissions brainOutput.textContent =          │
-│  `STATUS: Processing input via external cognitive module... (Attempt ${retryCount + 1}/${MAX_RETRIES + 1})`;               │
-│  systemStatus.textContent = `SYSTEM: AI module engaged (PID: ${Math.floor(Math.random() * 9999)}) ` + (retryCount > 0 ?    │
-│  `[RETRY ${retryCount}]` : '') + `<span class="loading"></span>`; const controller = new AbortController(); const          │
-│  timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS); // Client-side timeout try { const response =       │
-│  await fetch(SMART_BRAIN_API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body:            │
-│  JSON.stringify({ prompt: input }), signal: controller.signal // Link AbortController to fetch request });                 │
-│  clearTimeout(timeoutId); // Clear timeout if response received in time if (!response.ok) { throw new Error(`HTTP_ERROR:   │
-│  ${response.status} - ${response.statusText}`); } const data = await response.json(); brainOutput.textContent =            │
-│  `[AI_RESPONSE]:\n${JSON.stringify(data, null, 2)}`; systemStatus.textContent = "SYSTEM: AI module response received. ";   │
-│  } catch (error) { clearTimeout(timeoutId); // Ensure timeout is cleared on any error let errorMessage; if (error.name     │
-│  === 'AbortError') { // This is a client-side timeout or user cancellation (not implemented here) errorMessage =           │
-│  `AI_ERROR: Request timed out after ${REQUEST_TIMEOUT_MS / 1000} seconds. No response from cognitive unit.`; } else {      │
-│  errorMessage = `AI_ERROR: Could not connect or process. Check endpoint configuration or network. Details:                 │
-│  ${error.message}`; } brainOutput.textContent = errorMessage; systemStatus.textContent = "SYSTEM: AI module error          │
-│  (STATUS: DEGRADED)"; // --- Retry Logic --- if (retryCount < MAX_RETRIES) { const delay = INITIAL_RETRY_DELAY_MS *        │
-│  Math.pow(2, retryCount); systemStatus.textContent += ` RETRYING IN ${delay / 1000}s... `; await new Promise(resolve =>    │
-│  setTimeout(resolve, delay)); return sendToBrain(retryCount + 1); // Recursive call for retry } else {                     │
-│  brainOutput.textContent += "\nCRITICAL: Max retries reached. Operation failed definitively."; systemStatus.textContent =  │
-│  "SYSTEM: AI module critical failure (STATUS: OFFLINE)"; } } finally { executeBrainButton.disabled = false; // Re-enable   │
-│  button after operation completes or fails definitively } } async function fetchBackendData() { const queryPath =          │
-│  document.getElementById('backendQuery').value; const backendOutput = document.getElementById('backendOutput'); const      │
-│  systemStatus = document.getElementById('systemStatus'); const retrieveBackendDataButton =                                 │
-│  document.getElementById('retrieveBackendDataButton'); if (!queryPath.trim()) { backendOutput.textContent = "ERROR:        │
-│  Backend query path required."; return; } // --- UI State Management --- retrieveBackendDataButton.disabled = true;        │
-│  backendOutput.textContent = "STATUS: Requesting data from backend API layer...<span class='loading'></span>";             │
-│  systemStatus.textContent = "SYSTEM: Backend data fetch initiated (PROTOCOL: HTTPS)<span class='loading'></span>"; try {   │
-│  const response = await fetch(`${FUTUREPROOF_BACKEND_API_ENDPOINT}${queryPath}`); if (!response.ok) { throw new            │
-│  Error(`HTTP_ERROR: ${response.status} - ${response.statusText}`); } const data = await response.json();                   │
-│  backendOutput.textContent = `[BACKEND_DATA]:\n${JSON.stringify(data, null, 2)}`; systemStatus.textContent = "SYSTEM:      │
-│  Backend data stream complete. "; } catch (error) { backendOutput.textContent = `BACKEND_ERROR: Could not retrieve data.   │
-│  Check endpoint configuration or network. Details: ${error.message}`; systemStatus.textContent = "SYSTEM: Backend API      │
-│  error (STATUS: DEGRADED)"; } finally { retrieveBackendDataButton.disabled = false; } } // Initial system status update    │
-│  on DOM load document.addEventListener('DOMContentLoaded', () => { document.getElementById('systemStatus').textContent =   │
-│  "SYSTEM: Operational (Client-side, awaiting interaction)"; }); </script> </body> </html>         
+│  #6272a4; margin-top: 25px; } pre#gameOutput { background-color: #1a1e24; border: 1px solid #363b40; padding: 15px;        │
+│  white-space: pre-wrap; word-wrap: break-word; min-height: 250px; max-height: 500px; overflow-y: auto; color: #f8f8f2;     │
+│  line-height: 1.4; } input[type="text"] { width: calc(100% - 22px); padding: 12px; margin-top: 15px; background-color:     │
+│  #1a1e24; border: 1px solid #363b40; color: #f8f8f2; font-family: 'Courier New', monospace; font-size: 1em; } .prompt {    │
+│  color: #ffeb99; margin-top: 10px; display: block; } .status-bar { background-color: #282a36; color: #bd93f9; padding:     │
+│  10px 15px; margin-top: 20px; border: 1px solid #363b40; display: flex; justify-content: space-between; font-size: 0.9em;  │
+│  } .game-over { color: #ff5555; font-weight: bold; } .win-message { color: #50fa7b; font-weight: bold; } </style> </head>  │
+│  <body> <div class="container"> <h1>OMNI-Adventure: Dungeon Core v1.0</h1> <p>A text-based procedural dungeon exploration  │
+│  system. Enter commands below.</p> <div class="status-bar"> <span id="playerHealth">Health: 100</span> <span               │
+│  id="playerLevel">Dungeon Level: 1</span> <span id="playerScore">Score: 0</span> </div> <h2>&gt; Game Output Log:</h2>     │
+│  <pre id="gameOutput"> Initializing dungeon core... Welcome, adventurer. A new dungeon awaits. Type 'help' for commands.   │
+│  </pre> <label for="commandInput" class="prompt">&gt; Enter Command:</label> <input type="text" id="commandInput"          │
+│  autofocus onkeydown="if(event.key === 'Enter') processCommand()"> </div> <script> // --- CORE GAME STATE --- const Game   │
+│  = { player: { health: 100, maxHealth: 100, x: 0, y: 0, inventory: [], score: 0, dungeonLevel: 1 }, currentDungeon: null,  │
+│  gameOver: false, // Dungeon configuration DUNGEON_SIZE: 7, // NxN grid for rooms ROOM_TYPES: ['empty', 'monster',         │
+│  'treasure', 'trap', 'exit'], MAX_MONSTERS_PER_ROOM: 2, MAX_TREASURE_PER_ROOM: 1, MAX_TRAPS_PER_ROOM: 1, }; // --- DOM     │
+│  Elements --- const gameOutput = document.getElementById('gameOutput'); const commandInput =                               │
+│  document.getElementById('commandInput'); const playerHealthSpan = document.getElementById('playerHealth'); const          │
+│  playerLevelSpan = document.getElementById('playerLevel'); const playerScoreSpan =                                         │
+│  document.getElementById('playerScore'); // --- PCG_MODULE: DUNGEON_GENERATOR --- function generateDungeon(level) { const  │
+│  size = Game.DUNGEON_SIZE + Math.floor(level / 2); // Dungeon grows slightly with level const dungeon =                    │
+│  Array(size).fill(null).map(() => Array(size).fill(null)); // Place starting room const startX = Math.floor(Math.random()  │
+│  * size); const startY = Math.floor(Math.random() * size); Game.player.x = startX; Game.player.y = startY; const           │
+│  roomsToProcess = [{ x: startX, y: startY, distance: 0 }]; const visited = new Set(); visited.add(`${startX},${startY}`);  │
+│  let maxDistance = 0; let exitRoom = null; while (roomsToProcess.length > 0) { const { x, y, distance } =                  │
+│  roomsToProcess.shift(); if (dungeon[y][x] === null) { dungeon[y][x] = { type: 'empty', // Default, will be populated      │
+│  later entities: [], items: [], visited: false, exits: {} // N, S, E, W booleans }; } if (distance > maxDistance) {        │
+│  maxDistance = distance; exitRoom = { x, y }; } const directions = [[0, 1, 'south'], [0, -1, 'north'], [1, 0, 'east'],     │
+│  [-1, 0, 'west']]; shuffleArray(directions); // Randomize exploration path for (const [dx, dy, dirName] of directions) {   │
+│  const nx = x + dx; const ny = y + dy; const oppositeDir = getOppositeDirection(dirName); if (nx >= 0 && nx < size && ny   │
+│  >= 0 && ny < size && !visited.has(`${nx},${ny}`)) { if (Math.random() < 0.7 || distance === 0) { // Chance to create a    │
+│  path dungeon[y][x].exits[dirName] = true; // Ensure reverse connection if (!dungeon[ny][nx]) { dungeon[ny][nx] = { type:  │
+│  'empty', entities: [], items: [], visited: false, exits: {} }; } dungeon[ny][nx].exits[oppositeDir] = true;               │
+│  visited.add(`${nx},${ny}`); roomsToProcess.push({ x: nx, y: ny, distance: distance + 1 }); } } } } // Populate rooms      │
+│  with monsters, treasure, traps, and set exit for (let y = 0; y < size; y++) { for (let x = 0; x < size; x++) { if         │
+│  (dungeon[y][x]) { // Only populate existing rooms if (x === startX && y === startY) { dungeon[y][x].type = 'start'; }     │
+│  else if (x === exitRoom.x && y === exitRoom.y) { dungeon[y][x].type = 'exit'; } else { // Scale monster/treasure          │
+│  difficulty with dungeon level const monsterChance = 0.3 + (level * 0.05); const treasureChance = 0.2 + (level * 0.02);    │
+│  const trapChance = 0.1 + (level * 0.03); if (Math.random() < monsterChance && dungeon[y][x].entities.length <             │
+│  Game.MAX_MONSTERS_PER_ROOM) { dungeon[y][x].entities.push(createMonster(level)); dungeon[y][x].type = 'monster'; } if     │
+│  (Math.random() < treasureChance && dungeon[y][x].items.length < Game.MAX_TREASURE_PER_ROOM) {                             │
+│  dungeon[y][x].items.push(createTreasure(level)); dungeon[y][x].type = dungeon[y][x].type === 'empty' ? 'treasure' :       │
+│  dungeon[y][x].type; } if (Math.random() < trapChance && dungeon[y][x].items.length < Game.MAX_TRAPS_PER_ROOM) {           │
+│  dungeon[y][x].items.push(createTrap(level)); dungeon[y][x].type = dungeon[y][x].type === 'empty' ? 'trap' :               │
+│  dungeon[y][x].type; } } } } } return dungeon; } function createMonster(level) { const health = 10 + (level * 5) +         │
+│  Math.floor(Math.random() * 5); const attack = 2 + (level * 1) + Math.floor(Math.random() * 2); return { name: `Goblin     │
+│  Minion Lvl ${level}`, health, attack }; } function createTreasure(level) { const value = 50 * level +                     │
+│  Math.floor(Math.random() * 100); return { name: `Gold Pouch (${value} G)`, type: 'gold', value }; } function              │
+│  createTrap(level) { const damage = 5 + (level * 2) + Math.floor(Math.random() * 3); return { name: `Spike Trap`, type:    │
+│  'trap', damage, triggered: false }; } // --- Helper Functions --- function shuffleArray(array) { for (let i =             │
+│  array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j],          │
+│  array[i]]; } } function getOppositeDirection(dir) { switch(dir) { case 'north': return 'south'; case 'south': return      │
+│  'north'; case 'east': return 'west'; case 'west': return 'east'; } return null; } function appendOutput(text, type =      │
+│  'normal') { const span = document.createElement('span'); span.textContent = text + '\n'; if (type === 'game-over')        │
+│  span.className = 'game-over'; if (type === 'win-message') span.className = 'win-message'; gameOutput.appendChild(span);   │
+│  gameOutput.scrollTop = gameOutput.scrollHeight; // Auto-scroll } function updateStatusBar() {                             │
+│  playerHealthSpan.textContent = `Health: ${Game.player.health}/${Game.player.maxHealth}`; playerLevelSpan.textContent =    │
+│  `Dungeon Level: ${Game.player.dungeonLevel}`; playerScoreSpan.textContent = `Score: ${Game.player.score}`; if             │
+│  (Game.player.health <= 0) { Game.gameOver = true; appendOutput("CRITICAL_ERROR: Player health depleted. SYSTEM_SHUTDOWN.  │
+│  Game Over.", 'game-over'); commandInput.disabled = true; } } // --- INTERACTION_ENGINE --- function processCommand() {    │
+│  if (Game.gameOver) { appendOutput("GAME_OVER: Cannot process commands. Restart the system."); commandInput.value = '';    │
+│  return; } const input = commandInput.value.toLowerCase().trim(); commandInput.value = ''; // Clear input appendOutput(`>  │
+│  ${input}`); // Echo command const [command, ...args] = input.split(' '); switch (command) { case 'help':                  │
+│  appendOutput("Available commands:"); appendOutput(" look - Describe your current location."); appendOutput(" move         │
+│  <north|south|east|west> - Move in a direction."); appendOutput(" pickup - Pick up items in the room."); appendOutput("    │
+│  attack <enemy name> - Attack a monster (placeholder)."); appendOutput(" inventory - View your inventory."); break; case   │
+│  'look': look(); break; case 'move': move(args[0]); break; case 'pickup': pickup(); break; case 'attack':                  │
+│  appendOutput("COMMAND_UNSUPPORTED: Attack system not yet implemented. Flee instead!"); break; case 'inventory': if        │
+│  (Game.player.inventory.length === 0) { appendOutput("INVENTORY_STATUS: Empty."); } else {                                 │
+│  appendOutput("INVENTORY_CONTENTS:"); Game.player.inventory.forEach(item => appendOutput(` - ${item.name}`)); } break;     │
+│  default: appendOutput(`UNKNOWN_COMMAND: '${input}'. Type 'help' for assistance.`); } updateStatusBar(); } function        │
+│  look() { const currentRoom = Game.currentDungeon[Game.player.y][Game.player.x]; if (!currentRoom) { appendOutput("ERROR:  │
+│  You are in an undefined void. This should not happen."); return; } currentRoom.visited = true; // Mark as visited let     │
+│  description = `You are in a ${currentRoom.type} room.`; let features = []; if (currentRoom.entities.length > 0) {         │
+│  features.push(`You see ${currentRoom.entities.length} hostile entities: ${currentRoom.entities.map(e => `${e.name} (HP:   │
+│  ${e.health})`).join(', ')}.`); } if (currentRoom.items.length > 0) { features.push(`You spot items:                       │
+│  ${currentRoom.items.map(i => i.name).join(', ')}.`); } if (features.length > 0) { description += " " + features.join('    │
+│  '); } else { description += " It appears to be empty, for now."; } const exits =                                          │
+│  Object.keys(currentRoom.exits).filter(dir => currentRoom.exits[dir]).map(dir => dir.toUpperCase()); if (exits.length >    │
+│  0) { description += ` Exits are available to the ${exits.join(', ')}.`; } else { description += ` There are no obvious    │
+│  exits, you might be trapped.`; } appendOutput(description); // Trigger immediate effects for traps, etc.                  │
+│  currentRoom.items.forEach(item => { if (item.type === 'trap' && !item.triggered) { appendOutput(`WARNING: You triggered   │
+│  a ${item.name}! You take ${item.damage} damage.`, 'game-over'); Game.player.health -= item.damage; item.triggered =       │
+│  true; // Only trigger once updateStatusBar(); } }); } function move(direction) { const currentRoom =                      │
+│  Game.currentDungeon[Game.player.y][Game.player.x]; if (!currentRoom) { appendOutput("ERROR: Current room data corrupted.  │
+│  Cannot move."); return; } if (currentRoom.entities.length > 0) { appendOutput("BLOCKED: You cannot move while hostile     │
+│  entities are present! Defeat them first (or implement attack)."); return; } const targetX = Game.player.x; const targetY  │
+│  = Game.player.y; let newX = Game.player.x; let newY = Game.player.y; if (!currentRoom.exits[direction]) {                 │
+│  appendOutput(`DENIED: There is no exit to the ${direction}.`); return; } switch (direction) { case 'north': newY--;       │
+│  break; case 'south': newY++; break; case 'east': newX++; break; case 'west': newX--; break; default:                      │
+│  appendOutput(`INVALID_DIRECTION: '${direction}'. Use north, south, east, or west.`); return; } // Check boundaries if     │
+│  (newX < 0 || newX >= Game.currentDungeon[0].length || newY < 0 || newY >= Game.currentDungeon.length) {                   │
+│  appendOutput("BARRIER_ENCOUNTERED: You cannot move beyond the dungeon boundaries."); return; } Game.player.x = newX;      │
+│  Game.player.y = newY; appendOutput(`Moved ${direction}.`); const newRoom =                                                │
+│  Game.currentDungeon[Game.player.y][Game.player.x]; if (newRoom.type === 'exit') { appendOutput(`EXIT_FOUND: You located   │
+│  the exit! Advancing to Dungeon Level ${Game.player.dungeonLevel + 1}.`, 'win-message'); Game.player.dungeonLevel++;       │
+│  Game.player.score += 100 * Game.player.dungeonLevel; // Bonus for level completion Game.player.health =                   │
+│  Math.min(Game.player.maxHealth, Game.player.health + 20); // Heal slightly initGame(); // Generate next dungeon level     │
+│  return; } look(); // Describe new room } function pickup() { const currentRoom =                                          │
+│  Game.currentDungeon[Game.player.y][Game.player.x]; if (!currentRoom || currentRoom.items.length === 0) {                  │
+│  appendOutput("QUERY_FAILED: No items to pick up in this room."); return; } const pickedUpItems = []; currentRoom.items =  │
+│  currentRoom.items.filter(item => { if (item.type === 'gold') { Game.player.score += item.value;                           │
+│  appendOutput(`ITEM_ACQUIRED: You found ${item.name} and added ${item.value} gold to your score!`);                        │
+│  pickedUpItems.push(item); return false; // Remove gold from room } if (item.type === 'trap' && !item.triggered) {         │
+│  appendOutput(`WARNING: Cannot pick up active trap '${item.name}'. Avoid or disarm first (not implemented).`); return      │
+│  true; // Keep trap in room } // For other item types, add to inventory Game.player.inventory.push(item);                  │
+│  appendOutput(`ITEM_ACQUIRED: You picked up '${item.name}'.`); pickedUpItems.push(item); return false; // Remove item      │
+│  from room }); if (pickedUpItems.length === 0) { appendOutput("ITEM_ACQUISITION_FAILED: No valid items picked up."); }     │
+│  updateStatusBar(); } // --- GAME INITIALIZATION --- function initGame() { Game.currentDungeon =                           │
+│  generateDungeon(Game.player.dungeonLevel); // Ensure player starts at a valid room while                                  │
+│  (!Game.currentDungeon[Game.player.y][Game.player.x]) { Game.player.x = Math.floor(Math.random() * (Game.DUNGEON_SIZE +    │
+│  Math.floor(Game.player.dungeonLevel / 2))); Game.player.y = Math.floor(Math.random() * (Game.DUNGEON_SIZE +               │
+│  Math.floor(Game.player.dungeonLevel / 2))); } gameOutput.innerHTML = ''; // Clear previous output for new level           │
+│  appendOutput(`DUNGEON_GENERATED: Level ${Game.player.dungeonLevel} constructed.`); look(); // Describe starting room      │
+│  updateStatusBar(); commandInput.disabled = false; Game.gameOver = false; } // Start the game when the DOM is fully        │
+│  loaded document.addEventListener('DOMContentLoaded', initGame); </script> </body> </html>
