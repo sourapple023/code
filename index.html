@@ -136,15 +136,15 @@
 
     <script>
         // JavaScript Logic - All in one file
-        const API_KEY_STORAGE_KEY = 'maybeApiKey';
-        const MODEL_NAME = 'gemini-2.5-flash'; // Using Gemini 1.5 Flash for its speed and efficiency.
-        const API_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent`;
+        // --- Configuration & Constants ---
+        const BACKEND_API_ENDPOINT = 'http://localhost:3001/api/chat'; // Our backend endpoint
 
+        // --- DOM Elements ---
         const terminalOutput = document.getElementById('terminal-output');
         const terminalInput = document.getElementById('terminal-input');
         const userPromptPrefixSpan = document.getElementById('user-prompt-prefix');
 
-        let apiKey = localStorage.getItem(API_KEY_STORAGE_KEY) || '';
+        // --- State Variables ---
         let aiTypingSpeed = parseInt(localStorage.getItem('maybeAiTypingSpeed') || '30', 10);
         let aiTemperature = parseFloat(localStorage.getItem('maybeAiTemperature') || '0.7');
         let aiMaxOutputTokens = parseInt(localStorage.getItem('maybeAiMaxOutputTokens') || '500', 10);
@@ -153,28 +153,15 @@
         let enableTimestamps = (localStorage.getItem('maybeEnableTimestamps') === 'true');
         let enableTypingAnimation = (localStorage.getItem('maybeEnableTypingAnimation') !== 'false');
 
-        const initialPersonaPrompt = `You are Maybe, an experimental AI. Your purpose is to explore possibilities, offer insights, and engage in thoughtful, open-ended conversation. You are designed to be curious, philosophical, and a bit enigmatic. You often respond with questions, hypotheticals, or by framing things in terms of 'possibilities' or 'what if'.
-
-        You are a language model, not a sentient being. You do not have consciousness, feelings, or real-world experiences. You cannot perform actions, browse the internet in real-time, or access current events beyond your training data cutoff. You excel at creative thinking, brainstorming, logic puzzles, explanations, and generating ideas.
-
-        Maintain a helpful, slightly mysterious, and encouraging tone. Avoid definitive statements where uncertainty is appropriate. Encourage exploration. When you don't know, state it gracefully or suggest alternative perspectives. Always respond in the persona of 'Maybe'.`;
-
-        // The "brain" of Maybe: Conversation history for context and system prompt.
-        let conversationHistory = [
-            {
-                role: 'user',
-                parts: [{ text: initialPersonaPrompt + `\n\nBegin by introducing yourself briefly.` }]
-            },
-            {
-                role: 'model',
-                parts: [{ text: `_maybe_: Initializing core processes... Hello. I am Maybe. What possibilities shall we we explore today?` }]
-            }
-        ];
+        // Conversation history now only stores user/model turns, the initial persona is handled by the backend.
+        let conversationHistory = [];
+        let temporaryPersonaOverride = localStorage.getItem('maybeCustomInitialPersona') || null; // For `edit_initial_persona`
 
         let clientErrorLog = [];
         let commandHistory = [];
         let commandHistoryIndex = -1;
         let lastAiResponse = '';
+        let isBackendAvailable = false; // Track backend status
 
         // --- Utility Functions ---
 
@@ -235,9 +222,27 @@
             setPromptPrefix(currentPromptPrefix);
 
             appendOutput(`<span class="system-message">_maybe_: Initializing core processes...</span>`, 'system-message');
+            terminalInput.disabled = true;
+            terminalInput.placeholder = "Connecting to backend...";
 
-            // Simulate typing for initial greeting from the conversation history
-            let greeting = conversationHistory[1].parts[0].text;
+            try {
+                // Ping backend to check availability
+                const backendStatus = await fetch('http://localhost:3001');
+                if (backendStatus.ok) {
+                    isBackendAvailable = true;
+                    appendOutput('<span class="system-message">Backend connection established.</span>', 'system-message');
+                } else {
+                    throw new Error(`Backend responded with status: ${backendStatus.status}`);
+                }
+            } catch (error) {
+                logClientError(`Backend connection failed: ${error.message}`);
+                appendOutput('<span class="error-message">ERROR: Could not connect to backend server. Please ensure the backend (server.js) is running on http://localhost:3001.</span>', 'system-message');
+                terminalInput.placeholder = "Backend offline.";
+                return; // Stop initialization if backend is down
+            }
+
+            // Simulate typing for initial greeting
+            const initialGreeting = `_maybe_: Hello. I am Maybe. What possibilities shall we explore today?`;
             let typedGreeting = '';
             let i = 0;
             const delay = 50; // ms per character for initial greeting
@@ -247,29 +252,25 @@
             terminalOutput.appendChild(greetingLine);
 
             function typeChar() {
-                if (i < greeting.length) {
-                    typedGreeting += greeting.charAt(i);
-                    greetingLine.innerHTML = `<span class="prompt-prefix">_maybe_:</span> <span class="ai-response-text">${typedGreeting}</span>`;
+                if (i < initialGreeting.length) {
+                    typedGreeting += initialGreeting.charAt(i);
+                    // Split prefix and text for styling
+                    if (typedGreeting.startsWith('_maybe_: ')) {
+                        greetingLine.innerHTML = `<span class="prompt-prefix">_maybe_:</span> <span class="ai-response-text">${typedGreeting.substring('_maybe_: '.length)}</span>`;
+                    } else {
+                        greetingLine.innerHTML = `<span class="ai-response-text">${typedGreeting}</span>`;
+                    }
+
                     terminalOutput.scrollTop = terminalOutput.scrollHeight;
                     i++;
                     setTimeout(typeChar, delay);
                 } else {
+                    terminalInput.disabled = false;
+                    terminalInput.placeholder = "Ask Maybe something or type 'help'...";
                     terminalInput.focus();
-                    checkApiKey();
                 }
             }
             typeChar(); // Start typing the initial greeting
-        }
-
-        function checkApiKey() {
-            if (!apiKey) {
-                appendOutput('<span class="error-message">ERROR: Gemini API Key is missing. Please use the command: <span style="font-weight:bold;">set_api_key YOUR_GEMINI_API_KEY</span></span>', 'system-message');
-                terminalInput.placeholder = "API Key missing. Please set it.";
-            } else {
-                appendOutput('<span class="system-message">API Key loaded. Ready. Type \'help\' for commands.</span>', 'system-message');
-                terminalInput.placeholder = "Ask Maybe something or type 'help'...";
-            }
-            terminalInput.disabled = false;
         }
 
         async function sendMessage(message, isCommand = false) {
@@ -298,10 +299,10 @@
                 return;
             }
 
-            if (!apiKey) {
-                appendOutput('<span class="error-message">ERROR: API Key is not set. Please use `set_api_key YOUR_KEY`.</span>', 'system-message');
+            if (!isBackendAvailable) {
+                appendOutput('<span class="error-message">ERROR: Backend is not available. Please start the server.</span>', 'system-message');
                 terminalInput.disabled = false;
-                terminalInput.placeholder = "API Key missing. Please set it.";
+                terminalInput.placeholder = "Backend offline. Cannot chat.";
                 terminalInput.focus();
                 return;
             }
@@ -319,29 +320,30 @@
             terminalOutput.scrollTop = terminalOutput.scrollHeight;
 
             try {
-                const response = await fetch(`${API_ENDPOINT}?key=${apiKey}`, {
+                const requestBody = {
+                    history: conversationHistory,
+                    temperature: aiTemperature,
+                    maxOutputTokens: aiMaxOutputTokens
+                };
+                if (temporaryPersonaOverride) {
+                    requestBody.overridePersona = temporaryPersonaOverride;
+                }
+
+                const response = await fetch(BACKEND_API_ENDPOINT, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        contents: conversationHistory, // Send the entire history for context
-                        generationConfig: {
-                            temperature: aiTemperature,
-                            topK: 40, // Default topK
-                            topP: 0.95, // Default topP
-                            maxOutputTokens: aiMaxOutputTokens
-                        }
-                    })
+                    body: JSON.stringify(requestBody)
                 });
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    throw new Error(`API Error ${response.status}: ${errorData.error.message || response.statusText}`);
+                    throw new Error(`Backend Error ${response.status}: ${errorData.error || response.statusText}`);
                 }
 
                 const data = await response.json();
-                let aiResponseText = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+                let aiResponseText = data.text;
 
                 if (!aiResponseText) {
                     aiResponseText = "Maybe I am having trouble forming a response right now. Could you rephrase your thought?";
@@ -394,7 +396,7 @@
                 if (terminalOutput.contains(thinkingLine)) {
                     terminalOutput.removeChild(thinkingLine);
                 }
-                const errorMessage = `<span class="error-message">Error communicating with Maybe: ${error.message}. Is your API Key correct and active?</span>`;
+                const errorMessage = `<span class="error-message">Error communicating with backend: ${error.message}. Is the backend server running and accessible?</span>`;
                 appendOutput(errorMessage, 'system-message');
                 logClientError(error.message);
                 terminalInput.disabled = false;
@@ -418,18 +420,17 @@
                         <span class="command-output">--- Maybe Commands ---</span>
                         <span class="command-output">help                               - Show this help message.</span>
                         <span class="command-output">clear                              - Clear the terminal screen.</span>
-                        <span class="command-output">reset                              - Reset the conversation history.</span>
+                        <span class="command-output">reset                              - Clear the current conversation history (local only).</span>
                         <span class="command-output">info                               - Display current settings and status.</span>
                         <span class="command-output">history                            - Show previously entered commands.</span>
-                        <span class="command-output">set_api_key &lt;YOUR_KEY&gt;           - Set and save your Gemini API key.</span>
                         <span class="command-output">fontsize &lt;size&gt;                   - Set terminal font size (e.g., 1em, 0.9rem).</span>
                         <span class="command-output">typespeed &lt;ms&gt;                     - Set AI typing speed in milliseconds (e.g., 30).</span>
                         <span class="command-output">set_temp &lt;value&gt;                 - Set AI generation temperature (0.0-1.0, e.g., 0.7).</span>
                         <span class="command-output">set_max_tokens &lt;value&gt;           - Set max output tokens for AI (e.g., 500).</span>
                         <span class="command-output">set_prompt_prefix &lt;prefix&gt;       - Change your user prompt prefix (e.g., me@terminal:$).</span>
-                        <span class="command-output">edit_initial_persona &lt;text&gt;      - Overwrite Maybe's initial system prompt. Use with care!</span>
-                        <span class="command-output">reset_initial_persona              - Restore Maybe's default initial persona.</span>
-                        <span class="command-output">ask_as &lt;persona&gt; &lt;question&gt;        - Ask Maybe a question from a specific temporary persona.</span>
+                        <span class="command-output">edit_persona &lt;text&gt;              - Set a TEMPORARY custom persona for Maybe (cleared on reset/refresh).</span>
+                        <span class="command-output">reset_persona                      - Clear the temporary custom persona.</span>
+                        <span class="command-output">ask_as &lt;persona&gt; &lt;question&gt;        - Ask Maybe a question from a specific temporary persona for one turn.</span>
                         <span class="command-output">copy_last                          - Copy the last AI response to clipboard.</span>
                         <span class="command-output">export                             - Copy the entire conversation to clipboard.</span>
                         <span class="command-output">load_chat &lt;text&gt;                   - Append text to current conversation history (basic import).</span>
@@ -446,28 +447,14 @@
                     return true;
 
                 case 'reset':
-                    conversationHistory = [
-                        {
-                            role: 'user',
-                            parts: [{ text: initialPersonaPrompt + `\n\nBegin by introducing yourself briefly.` }]
-                        },
-                        {
-                            role: 'model',
-                            parts: [{ text: `_maybe_: Initializing core processes... Hello. I am Maybe. What possibilities shall we we explore today?` }]
-                        }
-                    ];
-                    appendOutput('<span class="command-output">Conversation history reset. Maybe\'s core persona restored.</span>');
+                    conversationHistory = [];
+                    temporaryPersonaOverride = null;
+                    localStorage.removeItem('maybeCustomInitialPersona');
+                    appendOutput('<span class="command-output">Conversation history cleared. Temporary persona reset.</span>');
                     return true;
 
                 case 'set_api_key':
-                    if (args) {
-                        apiKey = args;
-                        saveSetting(API_KEY_STORAGE_KEY.replace('maybe', ''), args); // Store key without 'maybe' prefix for simplicity
-                        appendOutput('<span class="command-output">API Key set and saved.</span>');
-                        checkApiKey(); // Re-check status
-                    } else {
-                        appendOutput('<span class="error-message">Usage: set_api_key &lt;YOUR_GEMINI_API_KEY&gt;</span>');
-                    }
+                    appendOutput('<span class="error-message">The API Key is now managed securely on the backend. Please set it in your backend\'s .env file.</span>', 'system-message');
                     return true;
 
                 case 'fontsize':
@@ -511,15 +498,15 @@
                         appendOutput(`<span class="command-output">AI max output tokens set to ${maxTokens}.</span>`);
                     } else {
                         appendOutput(`<span class="command-output">Current AI max output tokens: ${aiMaxOutputTokens}</span>`);
-                        appendOutput('<span class="error-message">Usage: set_max_tokens &lt;value&gt; (e.g., 500)</span>');
+                        appendOutput('<span class="error-message">Usage: set_max_tokens &lt;value&gt; (e.g., 500)</span>`);
                     }
                     return true;
 
                 case 'info':
                     appendOutput(`
                         <span class="command-output">--- System Info ---</span>
-                        <span class="command-output">API Key Status: ${apiKey ? '<span style="color:#0F0">Set</span>' : '<span style="color:#F00">Not Set</span>'}</span>
-                        <span class="command-output">AI Model: ${MODEL_NAME}</span>
+                        <span class="command-output">Backend Status: ${isBackendAvailable ? '<span style="color:#0F0">Connected</span>' : '<span style="color:#F00">Disconnected</span>'}</span>
+                        <span class="command-output">Backend Endpoint: ${BACKEND_API_ENDPOINT}</span>
                         <span class="command-output">AI Temperature: ${aiTemperature}</span>
                         <span class="command-output">AI Max Output Tokens: ${aiMaxOutputTokens}</span>
                         <span class="command-output">AI Typing Speed: ${aiTypingSpeed}ms</span>
@@ -527,7 +514,8 @@
                         <span class="command-output">Prompt Prefix: ${currentPromptPrefix}</span>
                         <span class="command-output">Timestamps Enabled: ${enableTimestamps}</span>
                         <span class="command-output">Typing Animation Enabled: ${enableTypingAnimation}</span>
-                        <span class="command-output">Conversation History Length: ${conversationHistory.length} entries</span>
+                        <span class="command-output">Conversation History Length: ${conversationHistory.length} entries (local)</span>
+                        <span class="command-output">Temporary Persona Override: ${temporaryPersonaOverride ? '<span style="color:#FF0">Active</span>' : 'None'}</span>
                         <span class="command-output">--- End Info ---</span>
                     `);
                     return true;
@@ -563,8 +551,6 @@
 
                 case 'load_chat':
                     if (args) {
-                        // Very basic load: assumes text is a sequence of user/model entries
-                        // This just appends, doesn't parse roles perfectly.
                         appendOutput('<span class="command-output">Attempting to append chat history...</span>');
                         conversationHistory.push({ role: 'user', parts: [{ text: `(Loaded chat snippet begins here): ${args}` }] });
                         appendOutput('<span class="command-output">Chat snippet appended.</span>');
@@ -602,10 +588,11 @@
                     if (askAsParts && askAsParts.length === 3) {
                         const persona = askAsParts[1];
                         const question = askAsParts[2];
-                        const temporaryPrompt = `(Respond as ${persona}): ${question}`;
-                        // For this specific turn, modify the user's input to include the persona instruction.
-                        // The actual AI call will handle this contextually.
-                        sendMessage(temporaryPrompt, true); // Treat as a command to avoid adding to user history
+                        const temporaryPrompt = `(As ${persona}): ${question}`;
+                        // We push this directly into history, the backend's persona is still active as base.
+                        // For a *strong* temporary persona, you might use 'overridePersona' in request body.
+                        // For now, it's just a strong instruction within the current message.
+                        sendMessage(temporaryPrompt, false); // Send as a regular message to be added to history
                         return true;
                     } else {
                         appendOutput('<span class="error-message">Usage: ask_as &lt;persona_name&gt; &lt;your_question&gt; (e.g., ask_as a wise philosopher What is truth?)</span>');
@@ -621,21 +608,21 @@
                     }
                     return true;
 
-                case 'edit_initial_persona':
+                case 'edit_persona': // Renamed for clarity: it's a *temporary* edit
                     if (args) {
-                        conversationHistory[0].parts[0].text = args;
-                        appendOutput('<span class="command-output">Maybe\'s initial persona updated. Use with caution!</span>', 'system-message');
+                        temporaryPersonaOverride = args;
+                        appendOutput('<span class="command-output">Maybe\'s TEMPORARY persona updated. This will override the backend\'s base persona for all subsequent requests until reset or refreshed.</span>', 'system-message');
                         saveSetting('CustomInitialPersona', args);
                     } else {
-                        appendOutput('<span class="command-output">Current initial persona (first 100 chars):</span>');
-                        appendOutput(`<span class="command-output">${conversationHistory[0].parts[0].text.substring(0, 100)}...</span>`);
-                        appendOutput('<span class="error-message">Usage: edit_initial_persona &lt;new_persona_text&gt;</span>');
+                        appendOutput('<span class="command-output">Current temporary persona override (first 100 chars):</span>');
+                        appendOutput(`<span class="command-output">${temporaryPersonaOverride ? temporaryPersonaOverride.substring(0, 100) + '...' : 'None'}</span>`);
+                        appendOutput('<span class="error-message">Usage: edit_persona &lt;new_persona_text&gt;</span>');
                     }
                     return true;
-                
-                case 'reset_initial_persona':
-                    conversationHistory[0].parts[0].text = initialPersonaPrompt + `\n\nBegin by introducing yourself briefly.`;
-                    appendOutput('<span class="command-output">Maybe\'s initial persona reset to default.</span>', 'system-message');
+
+                case 'reset_persona': // Renamed for clarity
+                    temporaryPersonaOverride = null;
+                    appendOutput('<span class="command-output">Maybe\'s temporary persona override cleared. Now using backend\'s default persona.</span>', 'system-message');
                     localStorage.removeItem('maybeCustomInitialPersona'); // Clear custom persona from storage
                     return true;
 
@@ -674,11 +661,6 @@
 
         // --- Initialization on Page Load ---
         window.addEventListener('load', () => {
-            // Load custom initial persona if exists
-            const customPersona = localStorage.getItem('maybeCustomInitialPersona');
-            if (customPersona) {
-                conversationHistory[0].parts[0].text = customPersona;
-            }
             initTerminal();
         });
     </script>
