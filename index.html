@@ -1,486 +1,251 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>OMNI AI Assistant</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
+    <title>OMNI | Aurora Intelligence</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Space+Grotesk:wght@300;500;700&display=swap');
 
-<style>
-/* Base styling from your original SVG */
-html, body {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Added a modern font */
-  color: #e0e0e0; /* Light text for dark background */
-  background: #000;
-  overflow: hidden; /* To prevent scrollbars from the SVG animation, and keep chat in view */
-}
+        :root {
+            --aurora-gradient: linear-gradient(90deg, #00f5ff, #7cff00, #ff00e5, #ffaa00, #00f5ff);
+        }
 
-body {
-  display: flex; /* Changed to flexbox for better layout control */
-  flex-direction: column; /* Stack SVG and chat vertically */
-  align-items: center; /* Center horizontally */
-  justify-content: center; /* Center vertically */
-  padding: 20px; /* Add some padding around the content */
-  box-sizing: border-box; /* Include padding in element's total width and height */
-  overflow-y: auto; /* Allow scrolling for the entire body if content exceeds viewport */
-}
+        body {
+            background-color: #050505;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-/* Responsive outer scale remains untouched */
-svg {
-  width: min(92vw, 900px);
-  height: auto;
-  max-height: 50vh; /* Give space for the chat below */
-  color: #ffffff;
-  margin-bottom: 30px; /* Space between SVG and chat */
-}
+        .font-heading { font-family: 'Space Grotesk', sans-serif; }
 
-/* Chat Interface Styling */
-.chat-container {
-  width: min(95vw, 700px); /* Max width for chat, slightly wider than SVG to give room */
-  display: flex;
-  flex-direction: column;
-  background-color: #1a1a1a; /* Darker background for chat box */
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 245, 255, 0.2); /* Subtle glow related to SVG colors */
-  overflow: hidden;
-  height: min(45vh, 400px); /* Limit chat height */
-  position: relative; /* For loading indicator positioning */
-}
+        .aurora-text {
+            background: var(--aurora-gradient);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: aurora-flow 10s linear indefinite;
+        }
 
-#chat-history {
-  flex-grow: 1;
-  padding: 15px;
-  overflow-y: auto; /* Scrollable chat history */
-  border-bottom: 1px solid #333;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+        @keyframes aurora-flow {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
 
-.message {
-  padding: 10px 15px;
-  border-radius: 8px;
-  max-width: 80%;
-  word-wrap: break-word; /* Ensure long words wrap */
-}
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+        }
 
-.user-message {
-  background-color: #004d40; /* Dark teal for user messages */
-  align-self: flex-end; /* Align to the right */
-  color: #e0f2f1;
-  text-align: right;
-}
+        .chat-container {
+            height: calc(100vh - 220px);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.1) transparent;
+        }
 
-.ai-message {
-  background-color: #262626; /* Slightly lighter dark for AI messages */
-  align-self: flex-start; /* Align to the left */
-  color: #cfd8dc;
-  text-align: left;
-}
+        .chat-container::-webkit-scrollbar {
+            width: 4px;
+        }
 
-.chat-input-area {
-  display: flex;
-  padding: 15px;
-  gap: 10px;
-  align-items: center;
-}
+        .chat-container::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
 
-#user-input {
-  flex-grow: 1;
-  padding: 12px 15px;
-  border: 1px solid #444;
-  border-radius: 8px;
-  background-color: #222;
-  color: #eee;
-  font-size: 1rem;
-  resize: none; /* Disable manual resize */
-  min-height: 40px; /* Ensure input area is visible */
-  max-height: 100px; /* Limit max height before scroll */
-  overflow-y: auto; /* Scroll if text exceeds max height */
-}
+        .message-user {
+            background: rgba(255, 255, 255, 0.07);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
 
-#user-input::placeholder {
-  color: #888;
-}
+        .message-ai {
+            background: rgba(0, 245, 255, 0.05);
+            border-left: 2px solid #00f5ff;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
 
-#user-input:focus {
-  outline: none;
-  border-color: #00f5ff; /* Highlight focus with aurora color */
-  box-shadow: 0 0 5px rgba(0, 245, 255, 0.5);
-}
+        .input-glow:focus-within {
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.15);
+            border-color: rgba(0, 245, 255, 0.4);
+        }
 
-#send-button {
-  padding: 12px 20px;
-  background: linear-gradient(90deg, #00f5ff, #7cff00); /* Aurora gradient for button */
-  color: #000;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: bold;
-  transition: all 0.3s ease;
-  min-width: 80px; /* Prevent button from shrinking too much */
-}
+        .loading-dots div {
+            width: 6px;
+            height: 6px;
+            background: #00f5ff;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .loading-dots div:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dots div:nth-child(2) { animation-delay: -0.16s; }
 
-#send-button:hover {
-  opacity: 0.9;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0, 245, 255, 0.4);
-}
-
-#send-button:disabled {
-  background: #555;
-  cursor: not-allowed;
-  opacity: 0.6;
-  box-shadow: none;
-}
-
-#loading-indicator {
-  position: absolute;
-  bottom: 15px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.7);
-  padding: 8px 15px;
-  border-radius: 6px;
-  color: #00f5ff;
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  z-index: 10; /* Ensure it's above other elements */
-}
-
-.spinner {
-  border: 3px solid rgba(0, 245, 255, 0.3);
-  border-top: 3px solid #00f5ff;
-  border-radius: 50%;
-  width: 16px;
-  height: 16px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.error-message {
-  color: #ff6347; /* Tomato red for errors */
-  background-color: #331a1a;
-  padding: 10px;
-  border-radius: 8px;
-  margin-top: 10px;
-  text-align: center;
-}
-
-/* Ensure SVG's aurora gradient animations are not blocked by chat */
-.svg-aurora-glow-container {
-    /* If you wrapped the SVG, this would be its container */
-}
-
-/* Media Queries for smaller screens */
-@media (max-width: 768px) {
-  svg {
-    max-height: 40vh;
-  }
-  .chat-container {
-    height: min(55vh, 400px);
-    width: 95vw;
-  }
-  #send-button {
-    padding: 10px 15px;
-    font-size: 0.9rem;
-  }
-  #user-input {
-    font-size: 0.9rem;
-    padding: 10px 12px;
-  }
-}
-
-@media (max-width: 480px) {
-  svg {
-    width: 100vw;
-    max-width: 350px; /* Prevent it from being too wide on very small screens */
-    max-height: 30vh;
-  }
-  .chat-container {
-    height: min(60vh, 350px);
-    width: 98vw;
-    margin-top: 20px;
-  }
-  .chat-input-area {
-    flex-direction: column;
-    padding: 10px;
-    gap: 8px;
-  }
-  #user-input {
-    width: calc(100% - 24px); /* Account for padding */
-    max-height: 80px;
-  }
-  #send-button {
-    width: 100%;
-    margin-top: 5px;
-  }
-}
-
-</style>
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
 </head>
+<body class="flex flex-col items-center justify-between p-4 md:p-8">
 
-<body>
+    <!-- Header Section -->
+    <header class="w-full max-w-4xl flex flex-col items-center gap-2 mb-6">
+        <!-- Logo SVG -->
+        <div class="w-48 h-auto">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 150" role="img" aria-label="OMNI logo">
+                <defs>
+                    <linearGradient id="auroraHue" x1="-120%" y1="0%" x2="120%" y2="0%" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#00f5ff"/>
+                        <stop offset="28%" stop-color="#7cff00"/>
+                        <stop offset="58%" stop-color="#ff00e5"/>
+                        <stop offset="82%" stop-color="#ffaa00"/>
+                        <stop offset="100%" stop-color="#00f5ff"/>
+                        <animate attributeName="x1" from="-120%" to="0%" dur="26s" repeatCount="indefinite"/>
+                        <animate attributeName="x2" from="120%" to="240%" dur="26s" repeatCount="indefinite"/>
+                    </linearGradient>
+                    <filter id="outerGlow" x="-60%" y="-60%" width="220%" height="220%">
+                        <feGaussianBlur stdDeviation="6"/>
+                        <feColorMatrix values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.85 0"/>
+                    </filter>
+                </defs>
+                <g transform="translate(100 37.5) scale(0.5)">
+                    <g fill="none" stroke="url(#auroraHue)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" filter="url(#outerGlow)">
+                        <animate attributeName="opacity" values="0.58;0.66;0.58" dur="22s" repeatCount="indefinite"/>
+                        <path d="M70 22 C44 22 22 44 22 75 C22 106 44 128 70 128 C96 128 118 106 118 75 C118 44 96 22 70 22 Z"/>
+                        <path d="M132 124 V38 Q132 26 144 26 H148 L184 92 L220 26 H224 Q236 26 236 38 V124"/>
+                        <path d="M246 124 V38 Q246 26 258 26 H262 L318 114 Q322 124 332 124 V38 Q332 26 320 26"/>
+                        <rect x="350" y="26" width="30" height="98" rx="15"/>
+                    </g>
+                    <g fill="#ffffff">
+                        <path d="M70 22 C44 22 22 44 22 75 C22 106 44 128 70 128 C96 128 118 106 118 75 C118 44 96 22 70 22 Z"/>
+                        <path d="M132 124 V38 Q132 26 144 26 H148 L184 92 L220 26 H224 Q236 26 236 38 V124"/>
+                        <path d="M246 124 V38 Q246 26 258 26 H262 L318 114 Q322 124 332 124 V38 Q332 26 320 26"/>
+                        <rect x="350" y="26" width="30" height="98" rx="15"/>
+                    </g>
+                </g>
+            </svg>
+        </div>
+        <p class="text-white/40 text-sm tracking-widest font-heading uppercase">Universal Neural Interface</p>
+    </header>
 
-<svg
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 400 150"
-  role="img"
-  aria-label="OMNI logo">
+    <!-- Main Chat Display -->
+    <main class="w-full max-w-4xl flex-grow glass-panel p-4 md:p-6 mb-6 flex flex-col relative overflow-hidden">
+        <div id="chatHistory" class="chat-container flex flex-col gap-4 overflow-y-auto pr-2">
+            <!-- Welcome Message -->
+            <div class="message-ai p-4 rounded-2xl max-w-[85%] text-sm md:text-base">
+                Welcome to OMNI. My intelligence is powered by Gemini 2.5 Flash. How can I assist your objective today?
+            </div>
+        </div>
 
-  <defs>
-    <!-- Aurora gradient -->
-    <linearGradient
-      id="auroraHue"
-      x1="-120%" y1="0%"
-      x2="120%"  y2="0%"
-      gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#00f5ff"/>
-      <stop offset="28%" stop-color="#7cff00"/>
-      <stop offset="58%" stop-color="#ff00e5"/>
-      <stop offset="82%" stop-color="#ffaa00"/>
-      <stop offset="100%" stop-color="#00f5ff"/>
-      <animate attributeName="x1" from="-120%" to="0%" dur="26s" repeatCount="indefinite"/>
-      <animate attributeName="x2" from="120%" to="240%" dur="26s" repeatCount="indefinite"/>
-    </linearGradient>
+        <!-- Loading Indicator -->
+        <div id="loading" class="hidden absolute bottom-24 left-10 flex items-center gap-2 text-xs text-[#00f5ff]/60">
+            <span class="font-heading uppercase tracking-tighter">Omni Processing</span>
+            <div class="loading-dots flex gap-1">
+                <div></div><div></div><div></div>
+            </div>
+        </div>
+    </main>
 
-    <!-- Outer glow -->
-    <filter id="outerGlow" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="6"/>
-      <feColorMatrix
-        values="
-          1 0 0 0 0
-          0 1 0 0 0
-          0 0 1 0 0
-          0 0 0 0.85 0"/>
-    </filter>
+    <!-- Input Footer -->
+    <footer class="w-full max-w-4xl mb-4">
+        <form id="chatForm" class="relative group">
+            <div class="glass-panel input-glow transition-all duration-300 p-2 pr-4 flex items-center border border-white/10">
+                <input 
+                    type="text" 
+                    id="userInput"
+                    autocomplete="off"
+                    placeholder="Message OMNI..." 
+                    class="bg-transparent border-none outline-none flex-grow p-3 text-white placeholder-white/20 focus:ring-0"
+                >
+                <button 
+                    type="submit"
+                    class="bg-white text-black px-6 py-2 rounded-xl font-heading font-bold hover:bg-[#00f5ff] transition-colors duration-200 active:scale-95 disabled:opacity-50"
+                >
+                    SEND
+                </button>
+            </div>
+        </form>
+    </footer>
 
-    <!-- Inner glow -->
-    <filter id="innerGlow">
-      <feGaussianBlur stdDeviation="2"/>
-    </filter>
-  </defs>
+    <script>
+        const apiKey = ""; // Set by environment
+        const chatHistory = document.getElementById('chatHistory');
+        const chatForm = document.getElementById('chatForm');
+        const userInput = document.getElementById('userInput');
+        const loading = document.getElementById('loading');
 
-  <!-- 🔽 50% RULE APPLIED HERE -->
-  <!-- Centered scale: (400 * .5 = 200, 150 * .5 = 75) -->
-  <g transform="translate(100 37.5) scale(0.5)">
+        const MODEL_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent";
 
-    <!-- Energy stroke -->
-    <g
-      fill="none"
-      stroke="url(#auroraHue)"
-      stroke-width="4"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      filter="url(#outerGlow)">
-      <animate attributeName="opacity"
-        values="0.58;0.66;0.58"
-        dur="22s"
-        repeatCount="indefinite"/>
+        function addMessage(text, role) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `p-4 rounded-2xl max-w-[85%] text-sm md:text-base animate-in fade-in slide-in-from-bottom-2 duration-300 ${role === 'user' ? 'message-user' : 'message-ai'}`;
+            msgDiv.textContent = text;
+            chatHistory.appendChild(msgDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
 
-      <!-- O -->
-      <path d="
-        M70 22
-        C44 22 22 44 22 75
-        C22 106 44 128 70 128
-        C96 128 118 106 118 75
-        C118 44 96 22 70 22 Z"/>
+        async function fetchGeminiResponse(query, retries = 5, delay = 1000) {
+            try {
+                const response = await fetch(`${MODEL_URL}?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: query }] }],
+                        systemInstruction: { 
+                            parts: [{ text: "You are OMNI, a futuristic, highly intelligent AI assistant. Your persona is calm, efficient, and sophisticated. Use concise but deeply insightful language." }] 
+                        }
+                    })
+                });
 
-      <!-- M -->
-      <path d="
-        M132 124
-        V38 Q132 26 144 26
-        H148
-        L184 92
-        L220 26
-        H224 Q236 26 236 38
-        V124"/>
+                if (!response.ok) {
+                    if (retries > 0) {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        return fetchGeminiResponse(query, retries - 1, delay * 2);
+                    }
+                    throw new Error('Signal lost. Unable to contact OMNI core.');
+                }
 
-      <!-- N -->
-      <path d="
-        M246 124
-        V38 Q246 26 258 26
-        H262
-        L318 114
-        Q322 124 332 124
-        V38 Q332 26 320 26"/>
+                const data = await response.json();
+                return data.candidates?.[0]?.content?.parts?.[0]?.text || "Communication error: Empty signal.";
+            } catch (error) {
+                if (retries > 0) {
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return fetchGeminiResponse(query, retries - 1, delay * 2);
+                }
+                return "The interface is currently experiencing high-dimensional interference. Please try again.";
+            }
+        }
 
-      <!-- I -->
-      <rect x="350" y="26" width="30" height="98" rx="15"/>
-    </g>
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = userInput.value.trim();
+            if (!text) return;
 
-    <!-- Core forms -->
-    <g fill="currentColor">
-      <path d="
-        M70 22
-        C44 22 22 44 22 75
-        C22 106 44 128 70 128
-        C96 128 118 106 118 75
-        C118 44 96 22 70 22 Z"/>
+            // Clear input and show user message
+            userInput.value = '';
+            addMessage(text, 'user');
+            
+            // Show loading
+            loading.classList.remove('hidden');
+            const submitBtn = chatForm.querySelector('button');
+            submitBtn.disabled = true;
 
-      <circle
-        cx="70"
-        cy="75"
-        r="22"
-        opacity="0.9"
-        filter="url(#innerGlow)"/>
+            // Get AI Response
+            const aiResponse = await fetchGeminiResponse(text);
+            
+            // Hide loading and show AI message
+            loading.classList.add('hidden');
+            submitBtn.disabled = false;
+            addMessage(aiResponse, 'ai');
+        });
 
-      <circle
-        cx="70"
-        cy="75"
-        r="34"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1"
-        opacity="0.055">
-        <animateTransform
-          type="rotate"
-          from="0 70 75"
-          to="360 70 75"
-          dur="90s"
-          repeatCount="indefinite"/>
-      </circle>
-
-      <path d="
-        M132 124
-        V38 Q132 26 144 26
-        H148
-        L184 92
-        L220 26
-        H224 Q236 26 236 38
-        V124"/>
-
-      <path d="
-        M246 124
-        V38 Q246 26 258 26
-        H262
-        L318 114
-        Q322 124 332 124
-        V38 Q332 26 320 26"/>
-
-      <rect x="350" y="26" width="30" height="98" rx="15"/>
-    </g>
-
-  </g>
-</svg>
-
-<div class="chat-container">
-  <div id="chat-history">
-    <div class="message ai-message">Hello! I am OMNI, powered by Gemini 1.5 Flash. How can I assist you today?</div>
-  </div>
-  <div class="chat-input-area">
-    <textarea id="user-input" placeholder="Ask OMNI anything..." rows="1"></textarea>
-    <button id="send-button">Send</button>
-  </div>
-  <div id="loading-indicator" style="display:none;">
-    <div class="spinner"></div>
-    Thinking...
-  </div>
-</div>
-
-<!-- Include the Google AI SDK -->
-<script type="module">
-  import { GoogleGenerativeAI } from "https://cdn.jsdelivr.net/npm/@google/generative-ai";
-
-  // --- !!! IMPORTANT SECURITY WARNING !!! ---
-  // Exposing your API key directly in client-side code is HIGHLY INSECURE for production apps.
-  // For production, use a server-side proxy to interact with the Gemini API.
-  const API_KEY = "AIzaSyBPis7L1eyI3AVEK0Tzqe4t55ezd9xT5jc"; // Your provided API key
-  // ------------------------------------------
-
-  const genAI = new GoogleGenerativeAI(API_KEY);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-  const chat = model.startChat({
-    history: [
-      {
-        role: "user",
-        parts: [{ text: "Hello! I am OMNI, powered by Gemini 1.5 Flash. How can I assist you today?" }],
-      },
-      {
-        role: "model",
-        parts: [{ text: "Hello! I am OMNI, powered by Gemini 1.5 Flash. How can I assist you today?" }],
-      }
-    ],
-    generationConfig: {
-      maxOutputTokens: 800, // Limit response length
-    },
-  });
-
-  const chatHistoryDiv = document.getElementById('chat-history');
-  const userInput = document.getElementById('user-input');
-  const sendButton = document.getElementById('send-button');
-  const loadingIndicator = document.getElementById('loading-indicator');
-
-  // Function to add a message to the chat history
-  function addMessage(text, sender) {
-    const messageDiv = document.createElement('div');
-    messageDiv.classList.add('message', `${sender}-message`);
-    messageDiv.innerText = text;
-    chatHistoryDiv.appendChild(messageDiv);
-    chatHistoryDiv.scrollTop = chatHistoryDiv.scrollHeight; // Scroll to bottom
-  }
-
-  // Function to handle sending messages
-  async function sendMessage() {
-    const message = userInput.value.trim();
-    if (message === "") return;
-
-    addMessage(message, 'user');
-    userInput.value = ''; // Clear input
-    userInput.style.height = 'auto'; // Reset textarea height
-    sendButton.disabled = true;
-    loadingIndicator.style.display = 'flex'; // Show loading indicator
-
-    try {
-      const result = await chat.sendMessage(message);
-      const response = await result.response;
-      const text = response.text();
-      addMessage(text, 'ai');
-    } catch (error) {
-      console.error("Error communicating with Gemini:", error);
-      const errorDiv = document.createElement('div');
-      errorDiv.classList.add('error-message');
-      errorDiv.innerText = `Error: Could not get a response from OMNI. Please try again. (${error.message})`;
-      chatHistoryDiv.appendChild(errorDiv);
-      chatHistoryDiv.scrollTop = chatHistoryDiv.scrollHeight;
-    } finally {
-      sendButton.disabled = false;
-      loadingIndicator.style.display = 'none'; // Hide loading indicator
-    }
-  }
-
-  // Event listeners
-  sendButton.addEventListener('click', sendMessage);
-
-  userInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' && !event.shiftKey) { // Send on Enter, allow Shift+Enter for new line
-      event.preventDefault(); // Prevent new line in textarea
-      sendMessage();
-    }
-  });
-
-  // Auto-resize textarea
-  userInput.addEventListener('input', () => {
-    userInput.style.height = 'auto';
-    userInput.style.height = userInput.scrollHeight + 'px';
-  });
-
-  // Initial resize for the placeholder
-  userInput.style.height = userInput.scrollHeight + 'px';
-
-  // Initial message from AI when page loads
-  // The initial AI message is now part of the HTML for better user experience.
-</script>
-
+        // Focus input on load
+        window.onload = () => userInput.focus();
+    </script>
 </body>
 </html>
