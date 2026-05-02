@@ -1,46 +1,475 @@
-html <!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"> <meta               │
-│  name="viewport" content="width=device-width, initial-scale=1.0"> <title>OMNI-Client: Distributed Intelligence            │
-│  Interface</title> <style> /* OMNI OS Terminal Theme */ body { font-family: 'Courier New', monospace; background-color:   │
-│  #0d1117; color: #8aff8a; margin: 20px; } .container { max-width: 800px; margin: auto; padding: 20px; border: 1px solid   │
-│  #363b40; box-shadow: 0 0 10px rgba(138, 255, 138, 0.2); } h1 { color: #50fa7b; border-bottom: 1px solid #363b40;         │
-│  padding-bottom: 10px; margin-bottom: 20px; } label { display: block; margin-bottom: 5px; color: #ffeb99; }               │
-│  input[type="text"], textarea { width: calc(100% - 22px); padding: 10px; margin-bottom: 15px; background-color: #1a1e24;  │
-│  border: 1px solid #363b40; color: #f8f8f2; font-family: 'Courier New', monospace; resize: vertical; } button {           │
-│  background-color: #6272a4; color: #f8f8f2; padding: 10px 15px; border: none; cursor: pointer; font-family: 'Courier      │
-│  New', monospace; transition: background-color 0.3s ease; } button:hover { background-color: #4b5980; } pre {             │
-│  background-color: #1a1e24; border: 1px solid #363b40; padding: 15px; white-space: pre-wrap; word-wrap: break-word;       │
-│  max-height: 400px; overflow-y: auto; } .status { margin-top: 20px; color: #ff6e6e; } </style> </head> <body> <div        │
-│  class="container"> <h1>OMNI-Client: System Interface v2026.01</h1> <p>This client facilitates interaction with           │
-│  distributed cognitive and data systems.</p> <section> <h2>&gt; Cognitive Processing Unit</h2> <label                     │
-│  for="brainInput">Enter command for AI:</label> <input type="text" id="brainInput" placeholder="Analyze system logs for   │
-│  anomalies..."> <button onclick="sendToBrain()">Execute AI Query</button> <h3>&gt; AI Response Output:</h3> <pre          │
-│  id="brainOutput">Awaiting command input...</pre> </section> <section style="margin-top: 30px;"> <h2>&gt; Backend Data    │
-│  Stream</h2> <label for="backendQuery">Enter backend data request (e.g., /status, /users/123):</label> <input             │
-│  type="text" id="backendQuery" value="/data/status"> <button onclick="fetchBackendData()">Retrieve Data</button>          │
-│  <h3>&gt; Backend Data Output:</h3> <pre id="backendOutput">Awaiting data request...</pre> </section> <p class="status"   │
-│  id="systemStatus">System: Operational (Client-side only)</p> </div> <script> // --- CONFIGURATION: Define your external  │
-│  API endpoints --- const SMART_BRAIN_API_ENDPOINT = 'https://api.external-ai-service.com/v1/process'; // Placeholder      │
-│  const FUTUREPROOF_BACKEND_API_ENDPOINT = 'https://api.your-serverless-backend.com'; // Placeholder //                    │
-│  -------------------------------------------------------- async function sendToBrain() { const input =                    │
-│  document.getElementById('brainInput').value; const brainOutput = document.getElementById('brainOutput'); const           │
-│  systemStatus = document.getElementById('systemStatus'); if (!input) { brainOutput.textContent = "Error: Input required   │
-│  for AI command."; return; } brainOutput.textContent = "Processing input via external cognitive module...";               │
-│  systemStatus.textContent = "System: AI module engaged (PID: " + Math.floor(Math.random() * 9999) + ")"; try { const      │
-│  response = await fetch(SMART_BRAIN_API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' },      │
-│  body: JSON.stringify({ prompt: input }) }); if (!response.ok) { throw new Error(`HTTP Error: ${response.status} -        │
-│  ${response.statusText}`); } const data = await response.json(); brainOutput.textContent =                                │
-│  `[AI_RESPONSE]:\n${JSON.stringify(data, null, 2)}`; systemStatus.textContent = "System: AI module response received.";   │
-│  } catch (error) { brainOutput.textContent = `[AI_ERROR]: Could not connect or process. Check endpoint configuration or   │
-│  network. Details: ${error.message}`; systemStatus.textContent = "System: AI module error (STATUS: OFFLINE)"; } } async   │
-│  function fetchBackendData() { const queryPath = document.getElementById('backendQuery').value; const backendOutput =     │
-│  document.getElementById('backendOutput'); const systemStatus = document.getElementById('systemStatus'); if (!queryPath)  │
-│  { backendOutput.textContent = "Error: Backend query path required."; return; } backendOutput.textContent = "Requesting   │
-│  data from backend API layer..."; systemStatus.textContent = "System: Backend data fetch initiated (PROTOCOL: HTTPS)";    │
-│  try { const response = await fetch(`${FUTUREPROOF_BACKEND_API_ENDPOINT}${queryPath}`); if (!response.ok) { throw new     │
-│  Error(`HTTP Error: ${response.status} - ${response.statusText}`); } const data = await response.json();                  │
-│  backendOutput.textContent = `[BACKEND_DATA]:\n${JSON.stringify(data, null, 2)}`; systemStatus.textContent = "System:     │
-│  Backend data stream complete."; } catch (error) { backendOutput.textContent = `[BACKEND_ERROR]: Could not retrieve       │
-│  data. Check endpoint configuration or network. Details: ${error.message}`; systemStatus.textContent = "System: Backend   │
-│  API error (STATUS: DEGRADED)"; } } // Initial status update document.addEventListener('DOMContentLoaded', () => {        │
-│  document.getElementById('systemStatus').textContent = "System: Operational (Client-side, awaiting interaction)"; });     │
-│  </script> </body> </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OMNI-26 Client: Distributed Intelligence Interface</title>
+    <style>
+        /* OMNI-26 OS Terminal Theme - CSS Variables for easy customization */
+        :root {
+            /* Core Theme Colors */
+            --bg-color: #0d1117; /* Dark background (GitHub Dark Dimmed) */
+            --primary-text-color: #8aff8a; /* Bright green for general text */
+            --border-color: #363b40; /* Greyish border */
+            --shadow-color: rgba(138, 255, 138, 0.2); /* Green glow for shadow */
+
+            /* Accent Colors */
+            --accent-green: #50fa7b; /* Drácula UI green for main headings/success */
+            --accent-yellow: #ffeb99; /* Drácula UI yellow for labels/warnings */
+            --accent-purple: #6272a4; /* Drácula UI purple for buttons */
+            --accent-purple-hover: #4b5980; /* Darker purple on hover */
+            --accent-red: #ff6e6e; /* Drácula UI red for errors */
+
+            /* Element Specific Colors */
+            --section-bg-color: #1a1e24; /* Darker background for sections */
+            --input-bg-color: #11151c; /* Even darker for inputs */
+            --input-text-color: #f8f8f2; /* Light text for inputs/output */
+            --placeholder-color: #6a737d; /* Lighter grey for placeholders */
+
+            /* Fonts */
+            --font-mono: 'Courier New', monospace;
+            --font-sans: 'Arial', sans-serif; /* Fallback for general text if needed */
+
+            /* Spacing & Sizing */
+            --spacing-xs: 5px;
+            --spacing-sm: 10px;
+            --spacing-md: 15px;
+            --spacing-lg: 20px;
+            --spacing-xl: 30px;
+            --max-width: 900px;
+        }
+
+        /* Base Styles */
+        body {
+            font-family: var(--font-mono);
+            background-color: var(--bg-color);
+            color: var(--primary-text-color);
+            margin: var(--spacing-lg);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align content to the top */
+            min-height: 100vh;
+            font-size: 16px; /* Base font size */
+        }
+
+        .container {
+            max-width: var(--max-width);
+            width: 100%;
+            padding: var(--spacing-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 var(--spacing-sm) var(--shadow-color);
+            background-color: var(--section-bg-color); /* Slightly lighter than body bg */
+            box-sizing: border-box; /* Include padding and border in element's total width/height */
+        }
+
+        /* Typography */
+        h1, h2, h3, legend {
+            color: var(--accent-green);
+            font-weight: normal; /* Terminal-like */
+            margin-top: 0;
+            margin-bottom: var(--spacing-md);
+        }
+
+        h1 {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: var(--spacing-sm);
+            font-size: 2em; /* ~32px */
+            margin-bottom: var(--spacing-xl);
+        }
+
+        h2, legend {
+            font-size: 1.5em; /* ~24px */
+            margin-bottom: var(--spacing-md);
+        }
+
+        h3 {
+            font-size: 1.1em; /* ~18px */
+            margin-top: var(--spacing-lg);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        p {
+            margin-bottom: var(--spacing-md);
+            line-height: 1.5;
+        }
+
+        /* Sections and Fieldsets */
+        fieldset {
+            border: 1px solid var(--border-color);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+            background-color: var(--input-bg-color); /* Even darker for fieldsets */
+        }
+
+        legend {
+            padding: 0 var(--spacing-sm);
+            margin-left: -5px; /* Adjust legend position to align with fieldset border */
+            font-size: 1.3em; /* Slightly smaller than h2 but larger than h3 */
+        }
+
+        /* Form Elements */
+        label {
+            display: block;
+            margin-bottom: var(--spacing-xs);
+            color: var(--accent-yellow);
+            font-size: 0.95em;
+        }
+
+        input[type="text"],
+        textarea {
+            width: calc(100% - (var(--spacing-sm) * 2 + 2px)); /* 2*padding + 2*border */
+            padding: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            background-color: var(--input-bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--input-text-color);
+            font-family: var(--font-mono);
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        input::placeholder {
+            color: var(--placeholder-color);
+            opacity: 0.7;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-green);
+            box-shadow: 0 0 5px rgba(80, 250, 123, 0.4);
+        }
+
+        /* Buttons */
+        button {
+            background-color: var(--accent-purple);
+            color: var(--input-text-color);
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: none;
+            cursor: pointer;
+            font-family: var(--font-mono);
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            margin-right: var(--spacing-sm);
+            border-radius: 3px;
+        }
+
+        button:hover {
+            background-color: var(--accent-purple-hover);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background-color: var(--border-color);
+            color: var(--placeholder-color);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Output Preformatted Text */
+        pre {
+            background-color: var(--input-bg-color);
+            border: 1px solid var(--border-color);
+            padding: var(--spacing-md);
+            white-space: pre-wrap; /* Preserve whitespace and wrap long lines */
+            word-wrap: break-word; /* Ensure long words break */
+            max-height: 400px;
+            overflow-y: auto;
+            color: var(--input-text-color);
+            font-size: 0.9em;
+        }
+
+        /* Status Messages */
+        .status {
+            margin-top: var(--spacing-xl);
+            font-size: 0.95em;
+            border-top: 1px dashed var(--border-color);
+            padding-top: var(--spacing-sm);
+        }
+
+        .status.success { color: var(--accent-green); }
+        .status.error { color: var(--accent-red); }
+        .status.warning { color: var(--accent-yellow); }
+        .status.info { color: var(--primary-text-color); } /* Default green */
+
+        /* Loading Spinner */
+        .loader {
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--accent-green);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: var(--spacing-sm);
+            opacity: 0; /* Hidden by default */
+            transition: opacity 0.3s ease;
+        }
+
+        .loader.active {
+            opacity: 1;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8em; }
+            h2, legend { font-size: 1.3em; }
+            body { margin: var(--spacing-md); }
+            .container { padding: var(--spacing-md); }
+            input[type="text"], textarea {
+                width: calc(100% - (var(--spacing-sm) * 2));
+            }
+        }
+
+        @media (max-width: 480px) {
+            body { margin: var(--spacing-sm); }
+            .container { padding: var(--spacing-sm); }
+            h1 { font-size: 1.5em; }
+            h2, legend { font-size: 1.2em; }
+            button {
+                display: block; /* Stack buttons on small screens */
+                width: 100%;
+                margin-bottom: var(--spacing-sm);
+                margin-right: 0;
+            }
+            input[type="text"], textarea {
+                padding: var(--spacing-xs);
+                width: calc(100% - (var(--spacing-xs) * 2));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>OMNI-26 Client: System Interface</h1>
+            <p>This client facilitates interaction with OMNI-26 distributed cognitive and data systems. Project OMNI-26 aims to unify these interactions across diverse modules.</p>
+        </header>
+
+        <main>
+            <fieldset>
+                <legend>&gt; OMNI-26 Cognitive Processing Unit</legend>
+                <label for="brainInput">Enter command for AI:</label>
+                <input type="text" id="brainInput" placeholder="Analyze system logs for anomalies or generate a project report..." autocomplete="off">
+                <button id="sendToBrainBtn">Execute AI Query</button>
+                <button id="clearBrainOutputBtn">Clear Output</button>
+                <span class="loader" id="brainLoader" role="status" aria-label="Loading AI response"></span>
+
+                <h3>&gt; AI Response Output:</h3>
+                <pre id="brainOutput" aria-live="polite" aria-atomic="true">Awaiting OMNI-26 command input...</pre>
+            </fieldset>
+
+            <fieldset>
+                <legend>&gt; OMNI-26 Backend Data Stream</legend>
+                <label for="backendQuery">Enter backend data request (e.g., /status, /users/123, /system/metrics):</label>
+                <input type="text" id="backendQuery" value="/data/status" autocomplete="off">
+                <button id="fetchBackendDataBtn">Retrieve Data</button>
+                <button id="clearBackendOutputBtn">Clear Output</button>
+                <span class="loader" id="backendLoader" role="status" aria-label="Loading backend data"></span>
+
+                <h3>&gt; Backend Data Output:</h3>
+                <pre id="backendOutput" aria-live="polite" aria-atomic="true">Awaiting OMNI-26 data request...</pre>
+            </fieldset>
+
+            <p class="status info" id="systemStatus" aria-live="polite" aria-atomic="true">System: Initializing OMNI-26 Client...</p>
+        </main>
+    </div>
+
+    <script>
+        // --- CONFIGURATION: Define your external API endpoints ---
+        // IMPORTANT: Replace these with your actual API endpoints.
+        // For development, consider using local mock servers or public test APIs.
+        const OMNI_AI_API_ENDPOINT = 'https://api.omni-ai-service.com/v1/process'; // Placeholder for OMNI-26 AI
+        const OMNI_BACKEND_API_ENDPOINT = 'https://api.omni-backend.com';         // Placeholder for OMNI-26 Backend
+        // --------------------------------------------------------
+
+        // --- DOM Element References ---
+        const brainInput = document.getElementById('brainInput');
+        const brainOutput = document.getElementById('brainOutput');
+        const sendToBrainBtn = document.getElementById('sendToBrainBtn');
+        const clearBrainOutputBtn = document.getElementById('clearBrainOutputBtn');
+        const brainLoader = document.getElementById('brainLoader');
+
+        const backendQuery = document.getElementById('backendQuery');
+        const backendOutput = document.getElementById('backendOutput');
+        const fetchBackendDataBtn = document.getElementById('fetchBackendDataBtn');
+        const clearBackendOutputBtn = document.getElementById('clearBackendOutputBtn');
+        const backendLoader = document.getElementById('backendLoader');
+
+        const systemStatus = document.getElementById('systemStatus');
+
+        // --- Utility Functions ---
+
+        /**
+         * Updates the system status message and applies appropriate styling.
+         * @param {string} message - The status message.
+         * @param {'success'|'error'|'warning'|'info'} type - Type of status for styling.
+         */
+        function updateSystemStatus(message, type = 'info') {
+            systemStatus.textContent = `System: ${message}`;
+            // Reset classes and add the new type
+            systemStatus.className = `status ${type}`;
+        }
+
+        /**
+         * Sets the loading state for a given section.
+         * Disables inputs/buttons and shows/hides a visual loader.
+         * @param {boolean} isLoading - True to set loading state, false to revert.
+         * @param {HTMLInputElement} inputElement - The input field to disable/enable.
+         * @param {HTMLButtonElement[]} buttonElements - An array of buttons to disable/enable.
+         * @param {HTMLElement} loaderElement - The loader spinner element.
+         */
+        function setLoadingState(isLoading, inputElement, buttonElements, loaderElement) {
+            inputElement.disabled = isLoading;
+            buttonElements.forEach(btn => btn.disabled = isLoading);
+            if (loaderElement) {
+                loaderElement.classList.toggle('active', isLoading);
+            }
+        }
+
+        /**
+         * Generic API call handler.
+         * @param {string} url - The URL to fetch from.
+         * @param {RequestInit} options - Fetch options (method, headers, body, etc.).
+         * @param {HTMLElement} outputElement - The DOM element to display the output.
+         * @param {string} moduleName - Name of the module (e.g., "OMNI-AI", "OMNI-BACKEND").
+         * @returns {Promise<any>} The parsed JSON data.
+         * @throws {Error} If the network request fails or response is not OK.
+         */
+        async function makeApiCall(url, options, outputElement, moduleName) {
+            try {
+                const response = await fetch(url, options);
+
+                if (!response.ok) {
+                    let errorDetails = `HTTP Error: ${response.status} - ${response.statusText}`;
+                    try {
+                        const errorBody = await response.json();
+                        errorDetails += `. Details: ${errorBody.message || JSON.stringify(errorBody, null, 2)}`;
+                    } catch (e) {
+                        const errorText = await response.text();
+                        if (errorText) errorDetails += `. Response: ${errorText.substring(0, 100)}...`;
+                    }
+                    throw new Error(errorDetails);
+                }
+
+                const data = await response.json();
+                outputElement.textContent = `[${moduleName}_RESPONSE]:\n${JSON.stringify(data, null, 2)}`;
+                return data;
+            } catch (error) {
+                outputElement.textContent = `[${moduleName}_ERROR]: Could not connect or process. ${error.message}`;
+                throw error; // Re-throw to be caught by specific functions
+            }
+        }
+
+        // --- OMNI-26 Module Functions ---
+
+        async function sendToBrain() {
+            const input = brainInput.value.trim();
+            if (!input) {
+                brainOutput.textContent = "[ERROR]: Input required for OMNI-26 AI command.";
+                updateSystemStatus("AI command failed: No input provided.", 'error');
+                return;
+            }
+
+            setLoadingState(true, brainInput, [sendToBrainBtn, clearBrainOutputBtn], brainLoader);
+            brainOutput.textContent = "Processing input via OMNI-26 cognitive module...";
+            updateSystemStatus("OMNI-26 AI module engaged (PID: " + Math.floor(Math.random() * 9999) + ")", 'warning');
+
+            try {
+                await makeApiCall(
+                    OMNI_AI_API_ENDPOINT,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer YOUR_OMNI_AI_API_KEY' // IMPORTANT: Replace with actual secure token/API key
+                        },
+                        body: JSON.stringify({ prompt: input, model: "omni-26-core-v1" }) // Example payload
+                    },
+                    brainOutput,
+                    "OMNI-AI"
+                );
+                updateSystemStatus("OMNI-26 AI module response received.", 'success');
+            } catch (error) {
+                updateSystemStatus("OMNI-26 AI module error (STATUS: OFFLINE)", 'error');
+            } finally {
+                setLoadingState(false, brainInput, [sendToBrainBtn, clearBrainOutputBtn], brainLoader);
+            }
+        }
+
+        async function fetchBackendData() {
+            const queryPath = backendQuery.value.trim();
+            if (!queryPath) {
+                backendOutput.textContent = "[ERROR]: Backend query path required.";
+                updateSystemStatus("Backend data request failed: No path provided.", 'error');
+                return;
+            }
+
+            setLoadingState(true, backendQuery, [fetchBackendDataBtn, clearBackendOutputBtn], backendLoader);
+            backendOutput.textContent = "Requesting data from OMNI-26 backend API layer...";
+            updateSystemStatus("OMNI-26 Backend data fetch initiated (PROTOCOL: HTTPS)", 'warning');
+
+            try {
+                await makeApiCall(
+                    `${OMNI_BACKEND_API_ENDPOINT}${queryPath}`,
+                    {
+                        headers: {
+                            'X-OMNI-Client-ID': 'OMNI-26-WebClient', // Example custom header
+                            'Accept': 'application/json'
+                        }
+                    },
+                    backendOutput,
+                    "OMNI-BACKEND"
+                );
+                updateSystemStatus("OMNI-26 Backend data stream complete.", 'success');
+            } catch (error) {
+                updateSystemStatus("OMNI-26 Backend API error (STATUS: DEGRADED)", 'error');
+            } finally {
+                setLoadingState(false, backendQuery, [fetchBackendDataBtn, clearBackendOutputBtn], backendLoader);
+            }
+        }
+
+        // --- Event Listeners ---
+        sendToBrainBtn.addEventListener('click', sendToBrain);
+        fetchBackendDataBtn.addEventListener('click', fetchBackendData);
+
+        // Allow pressing Enter key to trigger action in input fields
+        brainInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Prevent default form submission if input is part of a form
+                sendToBrain();
+            }
+        });
+        backendQuery.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                fetchBackendData();
+            }
+        });
+
+        // Clear output buttons
+        clearBrainOutputBtn.addEventListener('click', () => {
+            brainOutput.textContent = "Awaiting OMNI-26 command input...";
+            updateSystemStatus("AI output cleared.", 'info');
+        });
+        clearBackendOutputBtn.addEventListener('click', () => {
+            backendOutput.textContent = "Awaiting OMNI-26 data request...";
+            updateSystemStatus("Backend output cleared.", 'info');
+        });
+
+        // Initial status update on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateSystemStatus("Operational (Client-side, awaiting OMNI-26 interaction)", 'info');
+        });
+    </script>
+</body>
+</html>
