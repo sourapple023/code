@@ -23,9 +23,9 @@
         /* CSS Variables for easier theme management */
         :root {
             /* Deeper, more saturated dark theme */
-            --bg-color-dark: #1A1B26; /* Darker background */
-            --bg-color-medium: #24283B; /* Main container background */
-            --bg-color-light: #363B51; /* Input fields, code blocks, cards */
+            --bg-color-dark: #000000; /* Changed to pure black for OMNI style */
+            --bg-color-medium: #1A1B26; /* Main container background, slightly lighter than pure black */
+            --bg-color-light: #24283B; /* Input fields, code blocks, cards, lighter still */
             
             --text-color-light: #E0E0E0; /* Primary text */
             --text-color-faded: #A9B1D6; /* Secondary/placeholder text */
@@ -55,7 +55,7 @@
             font-family: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: var(--bg-color-dark);
+            background-color: var(--bg-color-dark); /* Uses the new pure black variable */
             color: var(--text-color-light);
             display: flex;
             flex-direction: column;
@@ -63,10 +63,27 @@
             min-height: 100vh;
             line-height: 1.6;
             text-rendering: optimizeLegibility; /* Improves text readability */
+            overflow-x: hidden; /* Important to prevent scrollbars from SVG animations */
         }
 
+        /* OMNI Logo Specific Styling */
+        #omni-logo-container {
+            width: 100%; /* Ensures the container takes full width, allowing the SVG to center */
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px; /* Space below the logo and before the main content */
+        }
+
+        #omni-logo-container svg { /* Target the SVG directly within its container */
+            width: min(92vw, 900px); /* Responsive width, up to a max of 900px */
+            height: auto; /* Maintain aspect ratio */
+            max-height: 90vh; /* Prevents logo from being excessively tall on small viewports */
+            color: #ffffff; /* Base color for the SVG's 'currentColor' fill (core forms) */
+        }
+
+        /* Adjustments for existing layout elements */
         .container {
-            background-color: var(--bg-color-medium);
+            background-color: var(--bg-color-medium); /* Now slightly lighter than the body background */
             border: 1px solid var(--border-color);
             border-radius: 12px;
             box-shadow: 0 8px 30px var(--shadow-color);
@@ -87,7 +104,7 @@
         h1 {
             color: var(--accent-blue);
             text-align: center;
-            margin-top: 0; /* Adjusted from initial setup */
+            margin-top: 0; /* Adjusted for placement below logo */
             margin-bottom: 25px;
             font-size: 2.8em;
             letter-spacing: 1px;
@@ -619,6 +636,152 @@
     </style>
 </head>
 <body>
+    <div id="omni-logo-container">
+        <!-- OMNI Logo SVG - Start -->
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 400 150"
+          role="img"
+          aria-label="OMNI logo">
+
+          <defs>
+            <!-- Aurora gradient -->
+            <linearGradient
+              id="auroraHue"
+              x1="-120%" y1="0%"
+              x2="120%"  y2="0%"
+              gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#00f5ff"/>
+              <stop offset="28%" stop-color="#7cff00"/>
+              <stop offset="58%" stop-color="#ff00e5"/>
+              <stop offset="82%" stop-color="#ffaa00"/>
+              <stop offset="100%" stop-color="#00f5ff"/>
+              <animate attributeName="x1" from="-120%" to="0%" dur="26s" repeatCount="indefinite"/>
+              <animate attributeName="x2" from="120%" to="240%" dur="26s" repeatCount="indefinite"/>
+            </linearGradient>
+
+            <!-- Outer glow -->
+            <filter id="outerGlow" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="6"/>
+              <feColorMatrix
+                values="
+                  1 0 0 0 0
+                  0 1 0 0 0
+                  0 0 1 0 0
+                  0 0 0 0.85 0"/>
+            </filter>
+
+            <!-- Inner glow -->
+            <filter id="innerGlow">
+              <feGaussianBlur stdDeviation="2"/>
+            </filter>
+          </defs>
+
+          <!-- 🔽 50% RULE APPLIED HERE -->
+          <!-- Centered scale: (400 * .5 = 200, 150 * .5 = 75) -->
+          <g transform="translate(100 37.5) scale(0.5)">
+
+            <!-- Energy stroke -->
+            <g
+              fill="none"
+              stroke="url(#auroraHue)"
+              stroke-width="4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              filter="url(#outerGlow)">
+              <animate attributeName="opacity"
+                values="0.58;0.66;0.58"
+                dur="22s"
+                repeatCount="indefinite"/>
+
+              <!-- O -->
+              <path d="
+                M70 22
+                C44 22 22 44 22 75
+                C22 106 44 128 70 128
+                C96 128 118 106 118 75
+                C118 44 96 22 70 22 Z"/>
+
+              <!-- M -->
+              <path d="
+                M132 124
+                V38 Q132 26 144 26
+                H148
+                L184 92
+                L220 26
+                H224 Q236 26 236 38
+                V124"/>
+
+              <!-- N -->
+              <path d="
+                M246 124
+                V38 Q246 26 258 26
+                H262
+                L318 114
+                Q322 124 332 124
+                V38 Q332 26 320 26"/>
+
+              <!-- I -->
+              <rect x="350" y="26" width="30" height="98" rx="15"/>
+            </g>
+
+            <!-- Core forms -->
+            <g fill="currentColor">
+              <path d="
+                M70 22
+                C44 22 22 44 22 75
+                C22 106 44 128 70 128
+                C96 128 118 106 118 75
+                C118 44 96 22 70 22 Z"/>
+
+              <circle
+                cx="70"
+                cy="75"
+                r="22"
+                opacity="0.9"
+                filter="url(#innerGlow)"/>
+
+              <circle
+                cx="70"
+                cy="75"
+                r="34"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1"
+                opacity="0.055">
+                <animateTransform
+                  type="rotate"
+                  from="0 70 75"
+                  to="360 70 75"
+                  dur="90s"
+                  repeatCount="indefinite"/>
+              </circle>
+
+              <path d="
+                M132 124
+                V38 Q132 26 144 26
+                H148
+                L184 92
+                L220 26
+                H224 Q236 26 236 38
+                V124"/>
+
+              <path d="
+                M246 124
+                V38 Q246 26 258 26
+                H262
+                L318 114
+                Q322 124 332 124
+                V38 Q332 26 320 26"/>
+
+              <rect x="350" y="26" width="30" height="98" rx="15"/>
+            </g>
+
+          </g>
+        </svg>
+        <!-- OMNI Logo SVG - End -->
+    </div>
+
     <div class="container">
         <h1>OmniAI - Gemini 2.5 Flash Explorer (Hypothetical)</h1>
         <p style="text-align: center; margin-bottom: 25px;">Interact directly with Google's powerful Gemini 2.5 Flash AI model, optimized for fast responses and efficiency. (Note: Gemini 2.5 Flash is a placeholder for a future, hypothetical model, as current versions are 1.5 Flash/Pro.)</p>
