@@ -1,5 +1,5 @@
-│  <!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width,         │
-│  initial-scale=1.0"> <title>OMNI-Adventure: Dungeon Core v1.0</title> <style> /* OMNI OS Terminal Theme for Game */ body   │
+html <!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width,    │
+│  initial-scale=1.0"> <title>OMNI-Adventure: Dungeon Core v2.0</title> <style> /* OMNI OS Terminal Theme for Game */ body   │
 │  { font-family: 'Courier New', monospace; background-color: #0d1117; color: #8aff8a; margin: 20px; } .container {          │
 │  max-width: 900px; margin: auto; padding: 25px; border: 1px solid #363b40; box-shadow: 0 0 15px rgba(138, 255, 138, 0.2);  │
 │  } h1 { color: #50fa7b; border-bottom: 1px solid #363b40; padding-bottom: 10px; margin-bottom: 20px; } h2 { color:         │
@@ -8,79 +8,108 @@
 │  line-height: 1.4; } input[type="text"] { width: calc(100% - 22px); padding: 12px; margin-top: 15px; background-color:     │
 │  #1a1e24; border: 1px solid #363b40; color: #f8f8f2; font-family: 'Courier New', monospace; font-size: 1em; } .prompt {    │
 │  color: #ffeb99; margin-top: 10px; display: block; } .status-bar { background-color: #282a36; color: #bd93f9; padding:     │
-│  10px 15px; margin-top: 20px; border: 1px solid #363b40; display: flex; justify-content: space-between; font-size: 0.9em;  │
-│  } .game-over { color: #ff5555; font-weight: bold; } .win-message { color: #50fa7b; font-weight: bold; } </style> </head>  │
-│  <body> <div class="container"> <h1>OMNI-Adventure: Dungeon Core v1.0</h1> <p>A text-based procedural dungeon exploration  │
-│  system. Enter commands below.</p> <div class="status-bar"> <span id="playerHealth">Health: 100</span> <span               │
-│  id="playerLevel">Dungeon Level: 1</span> <span id="playerScore">Score: 0</span> </div> <h2>&gt; Game Output Log:</h2>     │
-│  <pre id="gameOutput"> Initializing dungeon core... Welcome, adventurer. A new dungeon awaits. Type 'help' for commands.   │
-│  </pre> <label for="commandInput" class="prompt">&gt; Enter Command:</label> <input type="text" id="commandInput"          │
-│  autofocus onkeydown="if(event.key === 'Enter') processCommand()"> </div> <script> // --- CORE GAME STATE --- const Game   │
-│  = { player: { health: 100, maxHealth: 100, x: 0, y: 0, inventory: [], score: 0, dungeonLevel: 1 }, currentDungeon: null,  │
-│  gameOver: false, // Dungeon configuration DUNGEON_SIZE: 7, // NxN grid for rooms ROOM_TYPES: ['empty', 'monster',         │
-│  'treasure', 'trap', 'exit'], MAX_MONSTERS_PER_ROOM: 2, MAX_TREASURE_PER_ROOM: 1, MAX_TRAPS_PER_ROOM: 1, }; // --- DOM     │
-│  Elements --- const gameOutput = document.getElementById('gameOutput'); const commandInput =                               │
-│  document.getElementById('commandInput'); const playerHealthSpan = document.getElementById('playerHealth'); const          │
-│  playerLevelSpan = document.getElementById('playerLevel'); const playerScoreSpan =                                         │
-│  document.getElementById('playerScore'); // --- PCG_MODULE: DUNGEON_GENERATOR --- function generateDungeon(level) { const  │
-│  size = Game.DUNGEON_SIZE + Math.floor(level / 2); // Dungeon grows slightly with level const dungeon =                    │
+│  10px 15px; margin-top: 20px; border: 1px solid #363b40; display: flex; justify-content: space-between; flex-wrap: wrap;   │
+│  font-size: 0.9em; } .status-bar span { margin-right: 15px; margin-bottom: 5px; } .game-over { color: #ff5555;             │
+│  font-weight: bold; } .win-message { color: #50fa7b; font-weight: bold; } .combat-message { color: #f1fa8c; }              │
+│  .item-message { color: #ffb86c; } </style> </head> <body> <div class="container"> <h1>OMNI-Adventure: Dungeon Core        │
+│  v2.0</h1> <p>A text-based procedural dungeon exploration system. Enter commands below.</p> <div class="status-bar">       │
+│  <span id="playerHealth">Health: 100/100</span> <span id="playerLevel">Dungeon Level: 1</span> <span                       │
+│  id="playerScore">Score: 0</span> <span id="playerAttack">Attack: 10</span> <span id="playerDefense">Defense: 5</span>     │
+│  </div> <h2>&gt; Game Output Log:</h2> <pre id="gameOutput"> Initializing dungeon core... Welcome, adventurer. A new       │
+│  dungeon awaits. Type 'help' for commands. </pre> <label for="commandInput" class="prompt">&gt; Enter Command:</label>     │
+│  <input type="text" id="commandInput" autofocus onkeydown="if(event.key === 'Enter') processCommand()"> </div> <script>    │
+│  // --- CORE GAME STATE --- const Game = { player: { health: 100, maxHealth: 100, attack: 10, defense: 5, x: 0, y: 0,      │
+│  inventory: [], score: 0, dungeonLevel: 1 }, currentDungeon: null, gameOver: false, // Dungeon configuration               │
+│  DUNGEON_SIZE: 7, // NxN grid for rooms ROOM_TYPES: ['empty', 'monster', 'treasure', 'trap', 'exit'],                      │
+│  MAX_MONSTERS_PER_ROOM: 2, MAX_TREASURE_PER_ROOM: 1, MAX_TRAPS_PER_ROOM: 1, }; // --- DOM Elements --- const gameOutput =  │
+│  document.getElementById('gameOutput'); const commandInput = document.getElementById('commandInput'); const                │
+│  playerHealthSpan = document.getElementById('playerHealth'); const playerLevelSpan =                                       │
+│  document.getElementById('playerLevel'); const playerScoreSpan = document.getElementById('playerScore'); const             │
+│  playerAttackSpan = document.getElementById('playerAttack'); const playerDefenseSpan =                                     │
+│  document.getElementById('playerDefense'); // --- PCG_MODULE: DUNGEON_GENERATOR --- function generateDungeon(level) {      │
+│  const size = Game.DUNGEON_SIZE + Math.floor(level / 2); // Dungeon grows slightly with level const dungeon =              │
 │  Array(size).fill(null).map(() => Array(size).fill(null)); // Place starting room const startX = Math.floor(Math.random()  │
 │  * size); const startY = Math.floor(Math.random() * size); Game.player.x = startX; Game.player.y = startY; const           │
 │  roomsToProcess = [{ x: startX, y: startY, distance: 0 }]; const visited = new Set(); visited.add(`${startX},${startY}`);  │
-│  let maxDistance = 0; let exitRoom = null; while (roomsToProcess.length > 0) { const { x, y, distance } =                  │
-│  roomsToProcess.shift(); if (dungeon[y][x] === null) { dungeon[y][x] = { type: 'empty', // Default, will be populated      │
-│  later entities: [], items: [], visited: false, exits: {} // N, S, E, W booleans }; } if (distance > maxDistance) {        │
-│  maxDistance = distance; exitRoom = { x, y }; } const directions = [[0, 1, 'south'], [0, -1, 'north'], [1, 0, 'east'],     │
-│  [-1, 0, 'west']]; shuffleArray(directions); // Randomize exploration path for (const [dx, dy, dirName] of directions) {   │
-│  const nx = x + dx; const ny = y + dy; const oppositeDir = getOppositeDirection(dirName); if (nx >= 0 && nx < size && ny   │
-│  >= 0 && ny < size && !visited.has(`${nx},${ny}`)) { if (Math.random() < 0.7 || distance === 0) { // Chance to create a    │
-│  path dungeon[y][x].exits[dirName] = true; // Ensure reverse connection if (!dungeon[ny][nx]) { dungeon[ny][nx] = { type:  │
+│  let maxDistance = 0; let exitRoom = null; // Generate dungeon layout using a BFS-like approach while                      │
+│  (roomsToProcess.length > 0) { const { x, y, distance } = roomsToProcess.shift(); if (dungeon[y][x] === null) {            │
+│  dungeon[y][x] = { type: 'empty', // Default, will be populated later entities: [], items: [], visited: false, exits: {}   │
+│  // N, S, E, W booleans }; } if (distance > maxDistance) { maxDistance = distance; exitRoom = { x, y }; } const            │
+│  directions = [[0, 1, 'south'], [0, -1, 'north'], [1, 0, 'east'], [-1, 0, 'west']]; shuffleArray(directions); //           │
+│  Randomize exploration path for (const [dx, dy, dirName] of directions) { const nx = x + dx; const ny = y + dy; const      │
+│  oppositeDir = getOppositeDirection(dirName); if (nx >= 0 && nx < size && ny >= 0 && ny < size &&                          │
+│  !visited.has(`${nx},${ny}`)) { if (Math.random() < 0.7 || distance === 0) { // Chance to create a path                    │
+│  dungeon[y][x].exits[dirName] = true; // Ensure reverse connection if (!dungeon[ny][nx]) { dungeon[ny][nx] = { type:       │
 │  'empty', entities: [], items: [], visited: false, exits: {} }; } dungeon[ny][nx].exits[oppositeDir] = true;               │
 │  visited.add(`${nx},${ny}`); roomsToProcess.push({ x: nx, y: ny, distance: distance + 1 }); } } } } // Populate rooms      │
 │  with monsters, treasure, traps, and set exit for (let y = 0; y < size; y++) { for (let x = 0; x < size; x++) { if         │
 │  (dungeon[y][x]) { // Only populate existing rooms if (x === startX && y === startY) { dungeon[y][x].type = 'start'; }     │
-│  else if (x === exitRoom.x && y === exitRoom.y) { dungeon[y][x].type = 'exit'; } else { // Scale monster/treasure          │
-│  difficulty with dungeon level const monsterChance = 0.3 + (level * 0.05); const treasureChance = 0.2 + (level * 0.02);    │
-│  const trapChance = 0.1 + (level * 0.03); if (Math.random() < monsterChance && dungeon[y][x].entities.length <             │
-│  Game.MAX_MONSTERS_PER_ROOM) { dungeon[y][x].entities.push(createMonster(level)); dungeon[y][x].type = 'monster'; } if     │
-│  (Math.random() < treasureChance && dungeon[y][x].items.length < Game.MAX_TREASURE_PER_ROOM) {                             │
-│  dungeon[y][x].items.push(createTreasure(level)); dungeon[y][x].type = dungeon[y][x].type === 'empty' ? 'treasure' :       │
-│  dungeon[y][x].type; } if (Math.random() < trapChance && dungeon[y][x].items.length < Game.MAX_TRAPS_PER_ROOM) {           │
-│  dungeon[y][x].items.push(createTrap(level)); dungeon[y][x].type = dungeon[y][x].type === 'empty' ? 'trap' :               │
-│  dungeon[y][x].type; } } } } } return dungeon; } function createMonster(level) { const health = 10 + (level * 5) +         │
-│  Math.floor(Math.random() * 5); const attack = 2 + (level * 1) + Math.floor(Math.random() * 2); return { name: `Goblin     │
-│  Minion Lvl ${level}`, health, attack }; } function createTreasure(level) { const value = 50 * level +                     │
-│  Math.floor(Math.random() * 100); return { name: `Gold Pouch (${value} G)`, type: 'gold', value }; } function              │
-│  createTrap(level) { const damage = 5 + (level * 2) + Math.floor(Math.random() * 3); return { name: `Spike Trap`, type:    │
-│  'trap', damage, triggered: false }; } // --- Helper Functions --- function shuffleArray(array) { for (let i =             │
-│  array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j],          │
+│  else if (exitRoom && x === exitRoom.x && y === exitRoom.y) { dungeon[y][x].type = 'exit'; } else { // Scale               │
+│  monster/treasure difficulty with dungeon level const monsterChance = 0.3 + (level * 0.05); const treasureChance = 0.2 +   │
+│  (level * 0.02); const trapChance = 0.1 + (level * 0.03); if (Math.random() < monsterChance &&                             │
+│  dungeon[y][x].entities.length < Game.MAX_MONSTERS_PER_ROOM) { dungeon[y][x].entities.push(createMonster(level));          │
+│  dungeon[y][x].type = 'monster'; } if (Math.random() < treasureChance && dungeon[y][x].items.length <                      │
+│  Game.MAX_TREASURE_PER_ROOM) { dungeon[y][x].items.push(createTreasure(level)); dungeon[y][x].type = dungeon[y][x].type    │
+│  === 'empty' ? 'treasure' : dungeon[y][x].type; } if (Math.random() < trapChance && dungeon[y][x].items.length <           │
+│  Game.MAX_TRAPS_PER_ROOM) { dungeon[y][x].items.push(createTrap(level)); dungeon[y][x].type = dungeon[y][x].type ===       │
+│  'empty' ? 'trap' : dungeon[y][x].type; } } } } } return dungeon; } // --- Entity & Item Factories --- function            │
+│  createMonster(level) { const baseHealth = 15 + (level * 5); const baseAttack = 3 + (level * 2); const baseDefense = 1 +   │
+│  (level * 1); const monsterTypes = ['Goblin', 'Skeleton', 'Ogre', 'Slime']; const name =                                   │
+│  monsterTypes[Math.floor(Math.random() * monsterTypes.length)]; return { id: Math.random().toString(36).substring(2, 9),   │
+│  // Unique ID for targeting name: `${name} Lvl ${level}`, health: baseHealth + Math.floor(Math.random() * 5), maxHealth:   │
+│  baseHealth + Math.floor(Math.random() * 5), attack: baseAttack + Math.floor(Math.random() * 2), defense: baseDefense +    │
+│  Math.floor(Math.random() * 1), isAlive: true }; } function createTreasure(level) { const treasureTypes = [ { name: 'Gold  │
+│  Pouch', type: 'gold', value: 50 * level + Math.floor(Math.random() * 50) }, { name: 'Health Potion', type: 'consumable',  │
+│  effect: { health: 30 + (level * 5) }, description: 'Restores health.' }, { name: 'Attack Potion', type: 'consumable',     │
+│  effect: { attack: 5 + (level * 1) }, duration: 3, description: 'Temporarily boosts attack.' }, { name: 'Defense Potion',  │
+│  type: 'consumable', effect: { defense: 3 + (level * 1) }, duration: 3, description: 'Temporarily boosts defense.' }, ];   │
+│  const item = treasureTypes[Math.floor(Math.random() * treasureTypes.length)]; return { id:                                │
+│  Math.random().toString(36).substring(2, 9), ...item }; } function createTrap(level) { const damage = 10 + (level * 3) +   │
+│  Math.floor(Math.random() * 5); const trapTypes = ['Spike Trap', 'Poison Dart Trap', 'Falling Net']; const name =          │
+│  trapTypes[Math.floor(Math.random() * trapTypes.length)]; return { id: Math.random().toString(36).substring(2, 9), name:   │
+│  name, type: 'trap', damage, triggered: false }; } // --- Helper Functions --- function shuffleArray(array) { for (let i   │
+│  = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j],        │
 │  array[i]]; } } function getOppositeDirection(dir) { switch(dir) { case 'north': return 'south'; case 'south': return      │
 │  'north'; case 'east': return 'west'; case 'west': return 'east'; } return null; } function appendOutput(text, type =      │
 │  'normal') { const span = document.createElement('span'); span.textContent = text + '\n'; if (type === 'game-over')        │
-│  span.className = 'game-over'; if (type === 'win-message') span.className = 'win-message'; gameOutput.appendChild(span);   │
-│  gameOutput.scrollTop = gameOutput.scrollHeight; // Auto-scroll } function updateStatusBar() {                             │
-│  playerHealthSpan.textContent = `Health: ${Game.player.health}/${Game.player.maxHealth}`; playerLevelSpan.textContent =    │
-│  `Dungeon Level: ${Game.player.dungeonLevel}`; playerScoreSpan.textContent = `Score: ${Game.player.score}`; if             │
-│  (Game.player.health <= 0) { Game.gameOver = true; appendOutput("CRITICAL_ERROR: Player health depleted. SYSTEM_SHUTDOWN.  │
-│  Game Over.", 'game-over'); commandInput.disabled = true; } } // --- INTERACTION_ENGINE --- function processCommand() {    │
-│  if (Game.gameOver) { appendOutput("GAME_OVER: Cannot process commands. Restart the system."); commandInput.value = '';    │
-│  return; } const input = commandInput.value.toLowerCase().trim(); commandInput.value = ''; // Clear input appendOutput(`>  │
-│  ${input}`); // Echo command const [command, ...args] = input.split(' '); switch (command) { case 'help':                  │
-│  appendOutput("Available commands:"); appendOutput(" look - Describe your current location."); appendOutput(" move         │
-│  <north|south|east|west> - Move in a direction."); appendOutput(" pickup - Pick up items in the room."); appendOutput("    │
-│  attack <enemy name> - Attack a monster (placeholder)."); appendOutput(" inventory - View your inventory."); break; case   │
-│  'look': look(); break; case 'move': move(args[0]); break; case 'pickup': pickup(); break; case 'attack':                  │
-│  appendOutput("COMMAND_UNSUPPORTED: Attack system not yet implemented. Flee instead!"); break; case 'inventory': if        │
-│  (Game.player.inventory.length === 0) { appendOutput("INVENTORY_STATUS: Empty."); } else {                                 │
-│  appendOutput("INVENTORY_CONTENTS:"); Game.player.inventory.forEach(item => appendOutput(` - ${item.name}`)); } break;     │
-│  default: appendOutput(`UNKNOWN_COMMAND: '${input}'. Type 'help' for assistance.`); } updateStatusBar(); } function        │
-│  look() { const currentRoom = Game.currentDungeon[Game.player.y][Game.player.x]; if (!currentRoom) { appendOutput("ERROR:  │
-│  You are in an undefined void. This should not happen."); return; } currentRoom.visited = true; // Mark as visited let     │
-│  description = `You are in a ${currentRoom.type} room.`; let features = []; if (currentRoom.entities.length > 0) {         │
-│  features.push(`You see ${currentRoom.entities.length} hostile entities: ${currentRoom.entities.map(e => `${e.name} (HP:   │
-│  ${e.health})`).join(', ')}.`); } if (currentRoom.items.length > 0) { features.push(`You spot items:                       │
-│  ${currentRoom.items.map(i => i.name).join(', ')}.`); } if (features.length > 0) { description += " " + features.join('    │
-│  '); } else { description += " It appears to be empty, for now."; } const exits =                                          │
+│  span.className = 'game-over'; if (type === 'win-message') span.className = 'win-message'; if (type === 'combat-message')  │
+│  span.className = 'combat-message'; if (type === 'item-message') span.className = 'item-message';                          │
+│  gameOutput.appendChild(span); gameOutput.scrollTop = gameOutput.scrollHeight; // Auto-scroll } function                   │
+│  updateStatusBar() { playerHealthSpan.textContent = `Health: ${Math.max(0,                                                 │
+│  Game.player.health)}/${Game.player.maxHealth}`; playerLevelSpan.textContent = `Dungeon Level:                             │
+│  ${Game.player.dungeonLevel}`; playerScoreSpan.textContent = `Score: ${Game.player.score}`; playerAttackSpan.textContent   │
+│  = `Attack: ${Game.player.attack}`; playerDefenseSpan.textContent = `Defense: ${Game.player.defense}`; if                  │
+│  (Game.player.health <= 0 && !Game.gameOver) { Game.gameOver = true; appendOutput("CRITICAL_ERROR: Player health           │
+│  depleted. SYSTEM_SHUTDOWN. Game Over.", 'game-over'); commandInput.disabled = true; } } function applyEffect(target,      │
+│  effect) { if (effect.health) { target.health = Math.min(target.maxHealth, target.health + effect.health);                 │
+│  appendOutput(`${target === Game.player ? 'You' : target.name} restored ${effect.health} health!`); } if (effect.attack)   │
+│  { target.attack = (target.attack || 0) + effect.attack; appendOutput(`${target === Game.player ? 'Your' : target.name +   │
+│  "'s"} attack increased by ${effect.attack}!`); if (target === Game.player && effect.duration) { // Temporary effect for   │
+│  player setTimeout(() => { Game.player.attack -= effect.attack; appendOutput(`Your attack boost from the potion wore       │
+│  off.`, 'item-message'); updateStatusBar(); }, effect.duration * 10000); // 10 seconds duration } } if (effect.defense) {  │
+│  target.defense = (target.defense || 0) + effect.defense; appendOutput(`${target === Game.player ? 'Your' : target.name +  │
+│  "'s"} defense increased by ${effect.defense}!`); if (target === Game.player && effect.duration) { // Temporary effect     │
+│  for player setTimeout(() => { Game.player.defense -= effect.defense; appendOutput(`Your defense boost from the potion     │
+│  wore off.`, 'item-message'); updateStatusBar(); }, effect.duration * 10000); // 10 seconds duration } } } // ---          │
+│  INTERACTION_ENGINE --- function processCommand() { if (Game.gameOver) { appendOutput("GAME_OVER: Cannot process           │
+│  commands. Restart the system."); commandInput.value = ''; return; } const input =                                         │
+│  commandInput.value.toLowerCase().trim(); commandInput.value = ''; // Clear input appendOutput(`> ${input}`); // Echo      │
+│  command const [command, ...args] = input.split(' '); switch (command) { case 'help': appendOutput("Available              │
+│  commands:"); appendOutput(" look - Describe your current location."); appendOutput(" move <north|south|east|west> - Move  │
+│  in a direction."); appendOutput(" pickup - Pick up items in the room."); appendOutput(" attack <monster name/ID> -        │
+│  Attack a monster."); appendOutput(" inventory - View your inventory."); appendOutput(" use <item name/ID> - Use an item   │
+│  from your inventory."); break; case 'look': look(); break; case 'move': move(args[0]); break; case 'pickup': pickup();    │
+│  break; case 'attack': attack(args.join(' ')); // Join arguments to allow multi-word monster names break; case             │
+│  'inventory': displayInventory(); break; case 'use': useItem(args.join(' ')); break; default:                              │
+│  appendOutput(`UNKNOWN_COMMAND: '${input}'. Type 'help' for assistance.`); } updateStatusBar(); } function look() { const  │
+│  currentRoom = Game.currentDungeon[Game.player.y][Game.player.x]; if (!currentRoom) { appendOutput("ERROR: You are in an   │
+│  undefined void. This should not happen."); return; } currentRoom.visited = true; // Mark as visited let description =     │
+│  `You are in a ${currentRoom.type} room.`; let features = []; const livingEntities = currentRoom.entities.filter(e =>      │
+│  e.isAlive); if (livingEntities.length > 0) { features.push(`You see ${livingEntities.length} hostile entities:            │
+│  ${livingEntities.map(e => `${e.name} (HP: ${Math.max(0, e.health)}/${e.maxHealth}) [ID:${e.id.substring(0,4)}]`).join(',  │
+│  ')}.`); } if (currentRoom.items.length > 0) { features.push(`You spot items: ${currentRoom.items.map(i => i.name + (i.id  │
+│  ? ` [ID:${i.id.substring(0,4)}]` : '')).join(', ')}.`); } if (features.length > 0) { description += " " +                 │
+│  features.join(' '); } else { description += " It appears to be empty, for now."; } const exits =                          │
 │  Object.keys(currentRoom.exits).filter(dir => currentRoom.exits[dir]).map(dir => dir.toUpperCase()); if (exits.length >    │
 │  0) { description += ` Exits are available to the ${exits.join(', ')}.`; } else { description += ` There are no obvious    │
 │  exits, you might be trapped.`; } appendOutput(description); // Trigger immediate effects for traps, etc.                  │
@@ -88,34 +117,65 @@
 │  a ${item.name}! You take ${item.damage} damage.`, 'game-over'); Game.player.health -= item.damage; item.triggered =       │
 │  true; // Only trigger once updateStatusBar(); } }); } function move(direction) { const currentRoom =                      │
 │  Game.currentDungeon[Game.player.y][Game.player.x]; if (!currentRoom) { appendOutput("ERROR: Current room data corrupted.  │
-│  Cannot move."); return; } if (currentRoom.entities.length > 0) { appendOutput("BLOCKED: You cannot move while hostile     │
-│  entities are present! Defeat them first (or implement attack)."); return; } const targetX = Game.player.x; const targetY  │
-│  = Game.player.y; let newX = Game.player.x; let newY = Game.player.y; if (!currentRoom.exits[direction]) {                 │
-│  appendOutput(`DENIED: There is no exit to the ${direction}.`); return; } switch (direction) { case 'north': newY--;       │
-│  break; case 'south': newY++; break; case 'east': newX++; break; case 'west': newX--; break; default:                      │
-│  appendOutput(`INVALID_DIRECTION: '${direction}'. Use north, south, east, or west.`); return; } // Check boundaries if     │
-│  (newX < 0 || newX >= Game.currentDungeon[0].length || newY < 0 || newY >= Game.currentDungeon.length) {                   │
-│  appendOutput("BARRIER_ENCOUNTERED: You cannot move beyond the dungeon boundaries."); return; } Game.player.x = newX;      │
-│  Game.player.y = newY; appendOutput(`Moved ${direction}.`); const newRoom =                                                │
-│  Game.currentDungeon[Game.player.y][Game.player.x]; if (newRoom.type === 'exit') { appendOutput(`EXIT_FOUND: You located   │
-│  the exit! Advancing to Dungeon Level ${Game.player.dungeonLevel + 1}.`, 'win-message'); Game.player.dungeonLevel++;       │
-│  Game.player.score += 100 * Game.player.dungeonLevel; // Bonus for level completion Game.player.health =                   │
-│  Math.min(Game.player.maxHealth, Game.player.health + 20); // Heal slightly initGame(); // Generate next dungeon level     │
-│  return; } look(); // Describe new room } function pickup() { const currentRoom =                                          │
+│  Cannot move."); return; } const livingEntities = currentRoom.entities.filter(e => e.isAlive); if (livingEntities.length   │
+│  > 0) { appendOutput("BLOCKED: You cannot move while hostile entities are present! Defeat them first."); return; } let     │
+│  newX = Game.player.x; let newY = Game.player.y; if (!currentRoom.exits[direction]) { appendOutput(`DENIED: There is no    │
+│  exit to the ${direction}.`); return; } switch (direction) { case 'north': newY--; break; case 'south': newY++; break;     │
+│  case 'east': newX++; break; case 'west': newX--; break; default: appendOutput(`INVALID_DIRECTION: '${direction}'. Use     │
+│  north, south, east, or west.`); return; } // Check boundaries if (newX < 0 || newX >= Game.currentDungeon[0].length ||    │
+│  newY < 0 || newY >= Game.currentDungeon.length) { appendOutput("BARRIER_ENCOUNTERED: You cannot move beyond the dungeon   │
+│  boundaries."); return; } Game.player.x = newX; Game.player.y = newY; appendOutput(`Moved ${direction}.`); const newRoom   │
+│  = Game.currentDungeon[Game.player.y][Game.player.x]; if (newRoom.type === 'exit') { appendOutput(`EXIT_FOUND: You         │
+│  located the exit! Advancing to Dungeon Level ${Game.player.dungeonLevel + 1}.`, 'win-message');                           │
+│  Game.player.dungeonLevel++; Game.player.score += 100 * Game.player.dungeonLevel; // Bonus for level completion            │
+│  Game.player.health = Math.min(Game.player.maxHealth, Game.player.health + Game.player.maxHealth * 0.2); // Heal 20%       │
+│  Game.player.attack += 1; // Slight permanent stat boost Game.player.defense += 1; initGame(); // Generate next dungeon    │
+│  level return; } look(); // Describe new room } function pickup() { const currentRoom =                                    │
 │  Game.currentDungeon[Game.player.y][Game.player.x]; if (!currentRoom || currentRoom.items.length === 0) {                  │
 │  appendOutput("QUERY_FAILED: No items to pick up in this room."); return; } const pickedUpItems = []; currentRoom.items =  │
 │  currentRoom.items.filter(item => { if (item.type === 'gold') { Game.player.score += item.value;                           │
-│  appendOutput(`ITEM_ACQUIRED: You found ${item.name} and added ${item.value} gold to your score!`);                        │
+│  appendOutput(`ITEM_ACQUIRED: You found ${item.name} and added ${item.value} gold to your score!`, 'item-message');        │
 │  pickedUpItems.push(item); return false; // Remove gold from room } if (item.type === 'trap' && !item.triggered) {         │
 │  appendOutput(`WARNING: Cannot pick up active trap '${item.name}'. Avoid or disarm first (not implemented).`); return      │
 │  true; // Keep trap in room } // For other item types, add to inventory Game.player.inventory.push(item);                  │
-│  appendOutput(`ITEM_ACQUIRED: You picked up '${item.name}'.`); pickedUpItems.push(item); return false; // Remove item      │
-│  from room }); if (pickedUpItems.length === 0) { appendOutput("ITEM_ACQUISITION_FAILED: No valid items picked up."); }     │
-│  updateStatusBar(); } // --- GAME INITIALIZATION --- function initGame() { Game.currentDungeon =                           │
-│  generateDungeon(Game.player.dungeonLevel); // Ensure player starts at a valid room while                                  │
-│  (!Game.currentDungeon[Game.player.y][Game.player.x]) { Game.player.x = Math.floor(Math.random() * (Game.DUNGEON_SIZE +    │
-│  Math.floor(Game.player.dungeonLevel / 2))); Game.player.y = Math.floor(Math.random() * (Game.DUNGEON_SIZE +               │
-│  Math.floor(Game.player.dungeonLevel / 2))); } gameOutput.innerHTML = ''; // Clear previous output for new level           │
-│  appendOutput(`DUNGEON_GENERATED: Level ${Game.player.dungeonLevel} constructed.`); look(); // Describe starting room      │
-│  updateStatusBar(); commandInput.disabled = false; Game.gameOver = false; } // Start the game when the DOM is fully        │
-│  loaded document.addEventListener('DOMContentLoaded', initGame); </script> </body> </html>
+│  appendOutput(`ITEM_ACQUIRED: You picked up '${item.name}'.`, 'item-message'); pickedUpItems.push(item); return false; //  │
+│  Remove item from room }); if (pickedUpItems.length === 0) { appendOutput("ITEM_ACQUISITION_FAILED: No valid items picked  │
+│  up."); } updateStatusBar(); } // --- COMBAT SYSTEM --- function attack(targetNameOrId) { const currentRoom =              │
+│  Game.currentDungeon[Game.player.y][Game.player.x]; if (!currentRoom) return; const livingEntities =                       │
+│  currentRoom.entities.filter(e => e.isAlive); if (livingEntities.length === 0) { appendOutput("NO_TARGET: There are no     │
+│  enemies here to attack."); return; } let targetMonster = livingEntities.find(e =>                                         │
+│  e.name.toLowerCase().includes(targetNameOrId.toLowerCase())) || livingEntities.find(e =>                                  │
+│  e.id.startsWith(targetNameOrId)); if (!targetMonster) { appendOutput(`TARGET_NOT_FOUND: Could not find                    │
+│  '${targetNameOrId}'. Use 'look' to see available targets.`); return; } // Player attacks monster const playerDamage =     │
+│  Math.max(0, Game.player.attack - targetMonster.defense); targetMonster.health -= playerDamage; appendOutput(`COMBAT: You  │
+│  attack the ${targetMonster.name} for ${playerDamage} damage!`, 'combat-message'); if (targetMonster.health <= 0) {        │
+│  targetMonster.isAlive = false; appendOutput(`VICTORY: The ${targetMonster.name} has been defeated!`, 'win-message');      │
+│  Game.player.score += Game.player.dungeonLevel * 50; // Score for defeating monster } else { // Monster attacks player     │
+│  back const monsterDamage = Math.max(0, targetMonster.attack - Game.player.defense); Game.player.health -= monsterDamage;  │
+│  appendOutput(`COMBAT: The ${targetMonster.name} retaliates, dealing ${monsterDamage} damage! (Your Health: ${Math.max(0,  │
+│  Game.player.health)})`, 'combat-message'); } updateStatusBar(); // After combat, if no monsters, refresh room             │
+│  description. if (currentRoom.entities.filter(e => e.isAlive).length === 0) { appendOutput("All enemies defeated in this   │
+│  room."); } } // --- INVENTORY SYSTEM --- function displayInventory() { if (Game.player.inventory.length === 0) {          │
+│  appendOutput("INVENTORY_STATUS: Empty."); } else { appendOutput("INVENTORY_CONTENTS:");                                   │
+│  Game.player.inventory.forEach(item => appendOutput(` - ${item.name}` + (item.description ? ` (${item.description})` :     │
+│  '') + (item.id ? ` [ID:${item.id.substring(0,4)}]` : ''))); } } function useItem(itemNameOrId) { const itemIndex =        │
+│  Game.player.inventory.findIndex(item => item.name.toLowerCase().includes(itemNameOrId.toLowerCase()) ||                   │
+│  item.id.startsWith(itemNameOrId) ); if (itemIndex === -1) { appendOutput(`ITEM_NOT_FOUND: You don't have                  │
+│  '${itemNameOrId}' in your inventory.`); return; } const item = Game.player.inventory[itemIndex]; switch (item.type) {     │
+│  case 'consumable': applyEffect(Game.player, item.effect); Game.player.inventory.splice(itemIndex, 1); // Remove consumed  │
+│  item appendOutput(`ITEM_USED: You used the '${item.name}'.`, 'item-message'); break; case 'gold':                         │
+│  appendOutput(`ITEM_UNUSABLE: Gold can't be 'used' in this manner. It's already in your score.`); break; default:          │
+│  appendOutput(`ITEM_UNUSABLE: Cannot use '${item.name}'.`); } updateStatusBar(); } // --- GAME INITIALIZATION ---          │
+│  function initGame() { // Reset player health if it's a new game (not just new level) if (Game.player.dungeonLevel === 1)  │
+│  { Game.player.health = Game.player.maxHealth; Game.player.score = 0; Game.player.inventory = []; Game.player.attack =     │
+│  10; Game.player.defense = 5; } Game.currentDungeon = generateDungeon(Game.player.dungeonLevel); // Ensure player starts   │
+│  at a valid room let attempts = 0; const maxAttempts = (Game.DUNGEON_SIZE + Math.floor(Game.player.dungeonLevel / 2)) *    │
+│  (Game.DUNGEON_SIZE + Math.floor(Game.player.dungeonLevel / 2)) * 2; // Prevent infinite loops while                       │
+│  (!Game.currentDungeon[Game.player.y][Game.player.x] && attempts < maxAttempts) { Game.player.x =                          │
+│  Math.floor(Math.random() * Game.currentDungeon[0].length); Game.player.y = Math.floor(Math.random() *                     │
+│  Game.currentDungeon.length); attempts++; } if (attempts >= maxAttempts) { appendOutput("CRITICAL_ERROR: Failed to find    │
+│  valid starting room for dungeon. Regenerating...", 'game-over'); Game.player.dungeonLevel = Math.max(1,                   │
+│  Game.player.dungeonLevel - 1); // Retry previous level or current initGame(); return; } gameOutput.innerHTML = ''; //     │
+│  Clear previous output for new level appendOutput(`DUNGEON_GENERATED: Level ${Game.player.dungeonLevel} constructed.`);    │
+│  look(); // Describe starting room updateStatusBar(); commandInput.disabled = false; Game.gameOver = false; } // Start     │
+│  the game when the DOM is fully loaded document.addEventListener('DOMContentLoaded', initGame); </script> </body> </html>
