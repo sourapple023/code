@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,7 +35,7 @@
             margin-bottom: 10px;
             padding-right: 10px; /* Space for scrollbar */
             line-height: 1.5;
-            font-size: 1em;
+            font-size: var(--terminal-font-size, 1em); /* Use CSS variable */
             -ms-overflow-style: none; /* IE and Edge */
             scrollbar-width: none; /* Firefox */
         }
@@ -46,6 +47,7 @@
         .prompt-prefix {
             color: #0F0; /* Default green */
             margin-right: 5px;
+            flex-shrink: 0; /* Prevent prefix from shrinking */
         }
 
         .user-input-text {
@@ -63,6 +65,7 @@
         #terminal-input-line {
             display: flex;
             align-items: baseline;
+            gap: 5px; /* Space between prefix and input */
         }
 
         #terminal-input {
@@ -73,8 +76,9 @@
             outline: none;
             padding: 8px 10px;
             font-family: inherit;
-            font-size: 1em;
+            font-size: var(--terminal-font-size, 1em); /* Inherit font size */
             caret-color: #0F0; /* Blinking cursor color */
+            margin-top: 5px; /* Add some space above input */
         }
 
         #terminal-input::placeholder {
@@ -111,47 +115,81 @@
             60% { content: '...'; }
             80%, 100% { content: '....'; }
         }
+
+        /* Command specific styling */
+        .command-output {
+            color: #AFA; /* Light green for command output */
+        }
+        .ai-greeting {
+            color: #0FF;
+        }
+        .ai-greeting .prompt-prefix {
+            color: #0FF; /* Match _maybe_ prefix with AI color for greeting */
+        }
     </style>
 </head>
 <body>
     <div id="terminal-output"></div>
     <div id="terminal-input-line">
-        <span class="prompt-prefix">user@maybe:~$</span>
-        <input type="text" id="terminal-input" autofocus placeholder="Ask Maybe something...">
+        <span class="prompt-prefix" id="user-prompt-prefix">user@maybe:~$</span>
+        <input type="text" id="terminal-input" autofocus placeholder="Ask Maybe something or type 'help'...">
     </div>
 
     <script>
         // JavaScript Logic - All in one file
-        const API_KEY = 'YOUR_GEMINI_API_KEY'; // <<< IMPORTANT: Replace with your actual Gemini API Key
-        const MODEL_NAME = 'gemini-2.5-flash'; // This is the API name for Gemini 2.5 Flash
-        const API_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
+        const API_KEY_STORAGE_KEY = 'maybeApiKey';
+        const MODEL_NAME = 'gemini-2.5-flash'; // Using Gemini 1.5 Flash for its speed and efficiency.
+        const API_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent`;
 
         const terminalOutput = document.getElementById('terminal-output');
         const terminalInput = document.getElementById('terminal-input');
-        const promptPrefix = document.querySelector('.prompt-prefix');
+        const userPromptPrefixSpan = document.getElementById('user-prompt-prefix');
+
+        let apiKey = localStorage.getItem(API_KEY_STORAGE_KEY) || '';
+        let aiTypingSpeed = parseInt(localStorage.getItem('maybeAiTypingSpeed') || '30', 10);
+        let aiTemperature = parseFloat(localStorage.getItem('maybeAiTemperature') || '0.7');
+        let aiMaxOutputTokens = parseInt(localStorage.getItem('maybeAiMaxOutputTokens') || '500', 10);
+        let currentFontSize = localStorage.getItem('maybeFontSize') || '1em';
+        let currentPromptPrefix = localStorage.getItem('maybePromptPrefix') || 'user@maybe:~$';
+        let enableTimestamps = (localStorage.getItem('maybeEnableTimestamps') === 'true');
+        let enableTypingAnimation = (localStorage.getItem('maybeEnableTypingAnimation') !== 'false');
+
+        const initialPersonaPrompt = `You are Maybe, an experimental AI. Your purpose is to explore possibilities, offer insights, and engage in thoughtful, open-ended conversation. You are designed to be curious, philosophical, and a bit enigmatic. You often respond with questions, hypotheticals, or by framing things in terms of 'possibilities' or 'what if'.
+
+        You are a language model, not a sentient being. You do not have consciousness, feelings, or real-world experiences. You cannot perform actions, browse the internet in real-time, or access current events beyond your training data cutoff. You excel at creative thinking, brainstorming, logic puzzles, explanations, and generating ideas.
+
+        Maintain a helpful, slightly mysterious, and encouraging tone. Avoid definitive statements where uncertainty is appropriate. Encourage exploration. When you don't know, state it gracefully or suggest alternative perspectives. Always respond in the persona of 'Maybe'.`;
 
         // The "brain" of Maybe: Conversation history for context and system prompt.
-        // This initial state defines Maybe's personality and rules.
-        const conversationHistory = [
+        let conversationHistory = [
             {
                 role: 'user',
-                parts: [{ text: `You are Maybe, an experimental AI. Your purpose is to explore possibilities, offer insights, and engage in thoughtful, open-ended conversation. You are designed to be curious, philosophical, and a bit enigmatic. You often respond with questions, hypotheticals, or by framing things in terms of 'possibilities' or 'what if'.
-
-                You are a language model, not a sentient being. You do not have consciousness, feelings, or real-world experiences. You cannot perform actions, browse the internet in real-time, or access current events beyond your training data cutoff. You excel at creative thinking, brainstorming, logic puzzles, explanations, and generating ideas.
-
-                Maintain a helpful, slightly mysterious, and encouraging tone. Avoid definitive statements where uncertainty is appropriate. Encourage exploration. When you don't know, state it gracefully or suggest alternative perspectives. Always respond in the persona of 'Maybe'.
-                
-                Begin by introducing yourself briefly.` }]
+                parts: [{ text: initialPersonaPrompt + `\n\nBegin by introducing yourself briefly.` }]
             },
             {
                 role: 'model',
-                parts: [{ text: `_maybe_: Initializing core processes... Hello. I am Maybe. What possibilities shall we explore today?` }]
+                parts: [{ text: `_maybe_: Initializing core processes... Hello. I am Maybe. What possibilities shall we we explore today?` }]
             }
         ];
 
+        let clientErrorLog = [];
+        let commandHistory = [];
+        let commandHistoryIndex = -1;
+        let lastAiResponse = '';
+
+        // --- Utility Functions ---
+
+        function saveSetting(key, value) {
+            localStorage.setItem(`maybe${key}`, value);
+        }
+
+        function getTimestamp() {
+            return enableTimestamps ? `<span style="color:#555">[${new Date().toLocaleTimeString()}]</span> ` : '';
+        }
+
         function appendOutput(content, className = '') {
             const line = document.createElement('div');
-            line.innerHTML = content; // Using innerHTML to allow for HTML tags like <span>
+            line.innerHTML = getTimestamp() + content; // Using innerHTML to allow for HTML tags like <span>
             if (className) {
                 line.classList.add(className);
             }
@@ -159,46 +197,115 @@
             terminalOutput.scrollTop = terminalOutput.scrollHeight; // Scroll to bottom
         }
 
+        function setTerminalFontSize(size) {
+            document.documentElement.style.setProperty('--terminal-font-size', size);
+            currentFontSize = size;
+            saveSetting('FontSize', size);
+            appendOutput(`<span class="command-output">Font size set to: ${size}</span>`);
+        }
+
+        function setPromptPrefix(prefix) {
+            currentPromptPrefix = prefix;
+            userPromptPrefixSpan.textContent = prefix;
+            saveSetting('PromptPrefix', prefix);
+            appendOutput(`<span class="command-output">Prompt prefix set to: ${prefix}</span>`);
+        }
+
+        function logClientError(message) {
+            const timestamp = new Date().toISOString();
+            clientErrorLog.push({ timestamp, message });
+            if (clientErrorLog.length > 20) { // Keep last 20 errors
+                clientErrorLog.shift();
+            }
+            appendOutput(`<span class="error-message">Client Error: ${message}</span>`, 'system-message');
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                appendOutput('<span class="command-output">Copied to clipboard.</span>');
+            }).catch(err => {
+                logClientError(`Failed to copy to clipboard: ${err}`);
+                appendOutput('<span class="error-message">Failed to copy to clipboard.</span>');
+            });
+        }
+
+        // --- Core Terminal Functions ---
+
         async function initTerminal() {
-            appendOutput(`_maybe_: Initializing core processes...`, 'system-message');
-            // Simulate typing for initial greeting
-            let greeting = `Hello. I am Maybe. What possibilities shall we explore today?`;
+            setTerminalFontSize(currentFontSize);
+            setPromptPrefix(currentPromptPrefix);
+
+            appendOutput(`<span class="system-message">_maybe_: Initializing core processes...</span>`, 'system-message');
+
+            // Simulate typing for initial greeting from the conversation history
+            let greeting = conversationHistory[1].parts[0].text;
             let typedGreeting = '';
             let i = 0;
-            const delay = 50; // ms per character
+            const delay = 50; // ms per character for initial greeting
+
+            const greetingLine = document.createElement('div');
+            greetingLine.classList.add('ai-greeting'); // Specific class for initial greeting
+            terminalOutput.appendChild(greetingLine);
 
             function typeChar() {
                 if (i < greeting.length) {
                     typedGreeting += greeting.charAt(i);
-                    terminalOutput.lastChild.innerHTML = `<span class="prompt-prefix">_maybe_:</span> <span class="ai-response-text">${typedGreeting}</span>`;
+                    greetingLine.innerHTML = `<span class="prompt-prefix">_maybe_:</span> <span class="ai-response-text">${typedGreeting}</span>`;
                     terminalOutput.scrollTop = terminalOutput.scrollHeight;
                     i++;
                     setTimeout(typeChar, delay);
                 } else {
                     terminalInput.focus();
+                    checkApiKey();
                 }
             }
-            // Overwrite the simple init message with the typing effect
-            terminalOutput.lastChild.innerHTML = '';
-            appendOutput('', 'ai-response'); // Placeholder for typing
-            typeChar();
-
-            if (API_KEY === 'YOUR_GEMINI_API_KEY' || !API_KEY) {
-                appendOutput('<span class="error-message">ERROR: Gemini API Key is missing. Please replace "YOUR_GEMINI_API_KEY" in the script.</span>', 'system-message');
-                terminalInput.disabled = true;
-                terminalInput.placeholder = "API Key missing.";
-            }
+            typeChar(); // Start typing the initial greeting
         }
 
-        async function sendMessage(message) {
-            if (!message.trim()) return;
+        function checkApiKey() {
+            if (!apiKey) {
+                appendOutput('<span class="error-message">ERROR: Gemini API Key is missing. Please use the command: <span style="font-weight:bold;">set_api_key YOUR_GEMINI_API_KEY</span></span>', 'system-message');
+                terminalInput.placeholder = "API Key missing. Please set it.";
+            } else {
+                appendOutput('<span class="system-message">API Key loaded. Ready. Type \'help\' for commands.</span>', 'system-message');
+                terminalInput.placeholder = "Ask Maybe something or type 'help'...";
+            }
+            terminalInput.disabled = false;
+        }
 
-            // Display user's message
-            const userOutput = `<span class="prompt-prefix">user@maybe:~$</span> <span class="user-input-text">${message}</span>`;
-            appendOutput(userOutput);
+        async function sendMessage(message, isCommand = false) {
+            message = message.trim();
+            if (!message) return;
+
+            // Add to command history
+            if (!isCommand && message !== commandHistory[commandHistory.length - 1]) {
+                commandHistory.push(message);
+            }
+            commandHistoryIndex = commandHistory.length; // Reset index for new input
+
+            if (!isCommand) {
+                const userOutput = `<span class="prompt-prefix">${currentPromptPrefix}</span> <span class="user-input-text">${message}</span>`;
+                appendOutput(userOutput);
+            }
             terminalInput.value = '';
             terminalInput.disabled = true;
             terminalInput.placeholder = "Maybe is thinking...";
+
+            // Check if it's a command
+            if (await processCommand(message)) {
+                terminalInput.disabled = false;
+                terminalInput.placeholder = "Ask Maybe something or type 'help'...";
+                terminalInput.focus();
+                return;
+            }
+
+            if (!apiKey) {
+                appendOutput('<span class="error-message">ERROR: API Key is not set. Please use `set_api_key YOUR_KEY`.</span>', 'system-message');
+                terminalInput.disabled = false;
+                terminalInput.placeholder = "API Key missing. Please set it.";
+                terminalInput.focus();
+                return;
+            }
 
             // Add user message to conversation history
             conversationHistory.push({
@@ -213,7 +320,7 @@
             terminalOutput.scrollTop = terminalOutput.scrollHeight;
 
             try {
-                const response = await fetch(API_ENDPOINT, {
+                const response = await fetch(`${API_ENDPOINT}?key=${apiKey}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -221,10 +328,10 @@
                     body: JSON.stringify({
                         contents: conversationHistory, // Send the entire history for context
                         generationConfig: {
-                            temperature: 0.7,
-                            topK: 40,
-                            topP: 0.95,
-                            maxOutputTokens: 500
+                            temperature: aiTemperature,
+                            topK: 40, // Default topK
+                            topP: 0.95, // Default topP
+                            maxOutputTokens: aiMaxOutputTokens
                         }
                     })
                 });
@@ -240,9 +347,12 @@
                 if (!aiResponseText) {
                     aiResponseText = "Maybe I am having trouble forming a response right now. Could you rephrase your thought?";
                 }
+                lastAiResponse = aiResponseText; // Store for copy_last command
 
                 // Remove the "Thinking..." line
-                terminalOutput.removeChild(thinkingLine);
+                if (terminalOutput.contains(thinkingLine)) {
+                    terminalOutput.removeChild(thinkingLine);
+                }
 
                 // Add AI response to conversation history
                 conversationHistory.push({
@@ -250,28 +360,35 @@
                     parts: [{ text: aiResponseText }]
                 });
 
-                // Display AI's message with typing effect
-                let typedResponse = '';
-                let i = 0;
-                const responseDelay = 30; // ms per character for AI response
-
+                // Display AI's message with typing effect or instantly
                 const aiResponseLine = document.createElement('div');
                 terminalOutput.appendChild(aiResponseLine);
 
-                function typeResponseChar() {
-                    if (i < aiResponseText.length) {
-                        typedResponse += aiResponseText.charAt(i);
-                        aiResponseLine.innerHTML = `<span class="prompt-prefix">_maybe_:</span> <span class="ai-response-text">${typedResponse}</span>`;
-                        terminalOutput.scrollTop = terminalOutput.scrollHeight;
-                        i++;
-                        setTimeout(typeResponseChar, responseDelay);
-                    } else {
-                        terminalInput.disabled = false;
-                        terminalInput.placeholder = "Ask Maybe something...";
-                        terminalInput.focus();
+                if (enableTypingAnimation) {
+                    let typedResponse = '';
+                    let i = 0;
+                    function typeResponseChar() {
+                        if (i < aiResponseText.length) {
+                            typedResponse += aiResponseText.charAt(i);
+                            aiResponseLine.innerHTML = getTimestamp() + `<span class="prompt-prefix">_maybe_:</span> <span class="ai-response-text">${typedResponse}</span>`;
+                            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+                            i++;
+                            setTimeout(typeResponseChar, aiTypingSpeed);
+                        } else {
+                            terminalInput.disabled = false;
+                            terminalInput.placeholder = "Ask Maybe something or type 'help'...";
+                            terminalInput.focus();
+                        }
                     }
+                    typeResponseChar();
+                } else {
+                     aiResponseLine.innerHTML = getTimestamp() + `<span class="prompt-prefix">_maybe_:</span> <span class="ai-response-text">${aiResponseText}</span>`;
+                    terminalOutput.scrollTop = terminalOutput.scrollHeight;
+                    terminalInput.disabled = false;
+                    terminalInput.placeholder = "Ask Maybe something or type 'help'...";
+                    terminalInput.focus();
                 }
-                typeResponseChar();
+
 
             } catch (error) {
                 // Remove the "Thinking..." line if an error occurred during request
@@ -280,22 +397,291 @@
                 }
                 const errorMessage = `<span class="error-message">Error communicating with Maybe: ${error.message}. Is your API Key correct and active?</span>`;
                 appendOutput(errorMessage, 'system-message');
+                logClientError(error.message);
                 terminalInput.disabled = false;
                 terminalInput.placeholder = "Error. Try again?";
                 terminalInput.focus();
                 // Optionally remove the last user message from history if it didn't get a response
-                conversationHistory.pop();
+                if (conversationHistory.length > 0 && conversationHistory[conversationHistory.length - 1].role === 'user') {
+                    conversationHistory.pop();
+                }
             }
         }
+
+        async function processCommand(command) {
+            const parts = command.split(' ');
+            const cmd = parts[0].toLowerCase();
+            const args = parts.slice(1).join(' ');
+
+            switch (cmd) {
+                case 'help':
+                    appendOutput(`
+                        <span class="command-output">--- Maybe Commands ---</span>
+                        <span class="command-output">help                               - Show this help message.</span>
+                        <span class="command-output">clear                              - Clear the terminal screen.</span>
+                        <span class="command-output">reset                              - Reset the conversation history.</span>
+                        <span class="command-output">info                               - Display current settings and status.</span>
+                        <span class="command-output">history                            - Show previously entered commands.</span>
+                        <span class="command-output">set_api_key &lt;YOUR_KEY&gt;           - Set and save your Gemini API key.</span>
+                        <span class="command-output">fontsize &lt;size&gt;                   - Set terminal font size (e.g., 1em, 0.9rem).</span>
+                        <span class="command-output">typespeed &lt;ms&gt;                     - Set AI typing speed in milliseconds (e.g., 30).</span>
+                        <span class="command-output">set_temp &lt;value&gt;                 - Set AI generation temperature (0.0-1.0, e.g., 0.7).</span>
+                        <span class="command-output">set_max_tokens &lt;value&gt;           - Set max output tokens for AI (e.g., 500).</span>
+                        <span class="command-output">set_prompt_prefix &lt;prefix&gt;       - Change your user prompt prefix (e.g., me@terminal:$).</span>
+                        <span class="command-output">edit_initial_persona &lt;text&gt;      - Overwrite Maybe's initial system prompt. Use with care!</span>
+                        <span class="command-output">reset_initial_persona              - Restore Maybe's default initial persona.</span>
+                        <span class="command-output">ask_as &lt;persona&gt; &lt;question&gt;        - Ask Maybe a question from a specific temporary persona.</span>
+                        <span class="command-output">copy_last                          - Copy the last AI response to clipboard.</span>
+                        <span class="command-output">export                             - Copy the entire conversation to clipboard.</span>
+                        <span class="command-output">load_chat &lt;text&gt;                   - Append text to current conversation history (basic import).</span>
+                        <span class="command-output">timestamp_toggle                   - Toggle timestamps on output lines.</span>
+                        <span class="command-output">toggle_typing                      - Toggle AI typing animation on/off.</span>
+                        <span class="command-output">show_errors                        - Display recent client-side errors.</span>
+                        <span class="command-output">--- End Commands ---</span>
+                    `);
+                    return true;
+
+                case 'clear':
+                    terminalOutput.innerHTML = '';
+                    appendOutput('<span class="command-output">Terminal cleared.</span>');
+                    return true;
+
+                case 'reset':
+                    conversationHistory = [
+                        {
+                            role: 'user',
+                            parts: [{ text: initialPersonaPrompt + `\n\nBegin by introducing yourself briefly.` }]
+                        },
+                        {
+                            role: 'model',
+                            parts: [{ text: `_maybe_: Initializing core processes... Hello. I am Maybe. What possibilities shall we we explore today?` }]
+                        }
+                    ];
+                    appendOutput('<span class="command-output">Conversation history reset. Maybe\'s core persona restored.</span>');
+                    return true;
+
+                case 'set_api_key':
+                    if (args) {
+                        apiKey = args;
+                        saveSetting(API_KEY_STORAGE_KEY.replace('maybe', ''), args); // Store key without 'maybe' prefix for simplicity
+                        appendOutput('<span class="command-output">API Key set and saved.</span>');
+                        checkApiKey(); // Re-check status
+                    } else {
+                        appendOutput('<span class="error-message">Usage: set_api_key &lt;YOUR_GEMINI_API_KEY&gt;</span>');
+                    }
+                    return true;
+
+                case 'fontsize':
+                    if (args) {
+                        setTerminalFontSize(args);
+                    } else {
+                        appendOutput(`<span class="command-output">Current font size: ${currentFontSize}</span>`);
+                        appendOutput('<span class="error-message">Usage: fontsize &lt;size&gt; (e.g., 1em, 16px)</span>');
+                    }
+                    return true;
+
+                case 'typespeed':
+                    const speed = parseInt(args, 10);
+                    if (!isNaN(speed) && speed >= 0) {
+                        aiTypingSpeed = speed;
+                        saveSetting('AiTypingSpeed', speed);
+                        appendOutput(`<span class="command-output">AI typing speed set to ${speed}ms per character.</span>`);
+                    } else {
+                        appendOutput(`<span class="command-output">Current typing speed: ${aiTypingSpeed}ms</span>`);
+                        appendOutput('<span class="error-message">Usage: typespeed &lt;milliseconds&gt; (e.g., 30 for fast)</span>');
+                    }
+                    return true;
+
+                case 'set_temp':
+                    const temp = parseFloat(args);
+                    if (!isNaN(temp) && temp >= 0.0 && temp <= 1.0) {
+                        aiTemperature = temp;
+                        saveSetting('AiTemperature', temp);
+                        appendOutput(`<span class="command-output">AI temperature set to ${temp}.</span>`);
+                    } else {
+                        appendOutput(`<span class="command-output">Current AI temperature: ${aiTemperature}</span>`);
+                        appendOutput('<span class="error-message">Usage: set_temp &lt;value&gt; (0.0 to 1.0, e.g., 0.7)</span>');
+                    }
+                    return true;
+
+                case 'set_max_tokens':
+                    const maxTokens = parseInt(args, 10);
+                    if (!isNaN(maxTokens) && maxTokens > 0) {
+                        aiMaxOutputTokens = maxTokens;
+                        saveSetting('AiMaxOutputTokens', maxTokens);
+                        appendOutput(`<span class="command-output">AI max output tokens set to ${maxTokens}.</span>`);
+                    } else {
+                        appendOutput(`<span class="command-output">Current AI max output tokens: ${aiMaxOutputTokens}</span>`);
+                        appendOutput('<span class="error-message">Usage: set_max_tokens &lt;value&gt; (e.g., 500)</span>');
+                    }
+                    return true;
+
+                case 'info':
+                    appendOutput(`
+                        <span class="command-output">--- System Info ---</span>
+                        <span class="command-output">API Key Status: ${apiKey ? '<span style="color:#0F0">Set</span>' : '<span style="color:#F00">Not Set</span>'}</span>
+                        <span class="command-output">AI Model: ${MODEL_NAME}</span>
+                        <span class="command-output">AI Temperature: ${aiTemperature}</span>
+                        <span class="command-output">AI Max Output Tokens: ${aiMaxOutputTokens}</span>
+                        <span class="command-output">AI Typing Speed: ${aiTypingSpeed}ms</span>
+                        <span class="command-output">Terminal Font Size: ${currentFontSize}</span>
+                        <span class="command-output">Prompt Prefix: ${currentPromptPrefix}</span>
+                        <span class="command-output">Timestamps Enabled: ${enableTimestamps}</span>
+                        <span class="command-output">Typing Animation Enabled: ${enableTypingAnimation}</span>
+                        <span class="command-output">Conversation History Length: ${conversationHistory.length} entries</span>
+                        <span class="command-output">--- End Info ---</span>
+                    `);
+                    return true;
+
+                case 'history':
+                    if (commandHistory.length === 0) {
+                        appendOutput('<span class="command-output">No command history.</span>');
+                    } else {
+                        appendOutput('<span class="command-output">--- Command History ---</span>');
+                        commandHistory.forEach((cmd, index) => {
+                            appendOutput(`<span class="command-output">${index + 1}: ${cmd}</span>`);
+                        });
+                        appendOutput('<span class="command-output">--- End History ---</span>');
+                    }
+                    return true;
+
+                case 'copy_last':
+                    if (lastAiResponse) {
+                        copyToClipboard(lastAiResponse);
+                    } else {
+                        appendOutput('<span class="error-message">No previous AI response to copy.</span>');
+                    }
+                    return true;
+
+                case 'export':
+                    let fullConversation = '';
+                    conversationHistory.forEach(entry => {
+                        const prefix = entry.role === 'user' ? currentPromptPrefix : '_maybe_:';
+                        fullConversation += `${prefix} ${entry.parts[0].text}\n\n`;
+                    });
+                    copyToClipboard(fullConversation.trim());
+                    return true;
+
+                case 'load_chat':
+                    if (args) {
+                        // Very basic load: assumes text is a sequence of user/model entries
+                        // This just appends, doesn't parse roles perfectly.
+                        appendOutput('<span class="command-output">Attempting to append chat history...</span>');
+                        conversationHistory.push({ role: 'user', parts: [{ text: `(Loaded chat snippet begins here): ${args}` }] });
+                        appendOutput('<span class="command-output">Chat snippet appended.</span>');
+                    } else {
+                        appendOutput('<span class="error-message">Usage: load_chat &lt;text_to_append_to_history&gt;</span>');
+                    }
+                    return true;
+
+                case 'timestamp_toggle':
+                    enableTimestamps = !enableTimestamps;
+                    saveSetting('EnableTimestamps', enableTimestamps);
+                    appendOutput(`<span class="command-output">Timestamps ${enableTimestamps ? 'enabled' : 'disabled'}.</span>`);
+                    return true;
+
+                case 'toggle_typing':
+                    enableTypingAnimation = !enableTypingAnimation;
+                    saveSetting('EnableTypingAnimation', enableTypingAnimation);
+                    appendOutput(`<span class="command-output">AI typing animation ${enableTypingAnimation ? 'enabled' : 'disabled'}.</span>`);
+                    return true;
+
+                case 'show_errors':
+                    if (clientErrorLog.length === 0) {
+                        appendOutput('<span class="command-output">No client-side errors logged.</span>');
+                    } else {
+                        appendOutput('<span class="command-output">--- Client Error Log ---</span>');
+                        clientErrorLog.forEach(error => {
+                            appendOutput(`<span class="error-message">[${error.timestamp}] ${error.message}</span>`);
+                        });
+                        appendOutput('<span class="command-output">--- End Error Log ---</span>');
+                    }
+                    return true;
+
+                case 'ask_as':
+                    const askAsParts = args.match(/^(\S+)\s+(.*)/);
+                    if (askAsParts && askAsParts.length === 3) {
+                        const persona = askAsParts[1];
+                        const question = askAsParts[2];
+                        const temporaryPrompt = `(Respond as ${persona}): ${question}`;
+                        // For this specific turn, modify the user's input to include the persona instruction.
+                        // The actual AI call will handle this contextually.
+                        sendMessage(temporaryPrompt, true); // Treat as a command to avoid adding to user history
+                        return true;
+                    } else {
+                        appendOutput('<span class="error-message">Usage: ask_as &lt;persona_name&gt; &lt;your_question&gt; (e.g., ask_as a wise philosopher What is truth?)</span>');
+                    }
+                    return true;
+
+                case 'set_prompt_prefix':
+                    if (args) {
+                        setPromptPrefix(args);
+                    } else {
+                        appendOutput(`<span class="command-output">Current prompt prefix: ${currentPromptPrefix}</span>`);
+                        appendOutput('<span class="error-message">Usage: set_prompt_prefix &lt;new_prefix&gt; (e.g., my_user@pc:$)</span>');
+                    }
+                    return true;
+
+                case 'edit_initial_persona':
+                    if (args) {
+                        conversationHistory[0].parts[0].text = args;
+                        appendOutput('<span class="command-output">Maybe\'s initial persona updated. Use with caution!</span>', 'system-message');
+                        saveSetting('CustomInitialPersona', args);
+                    } else {
+                        appendOutput('<span class="command-output">Current initial persona (first 100 chars):</span>');
+                        appendOutput(`<span class="command-output">${conversationHistory[0].parts[0].text.substring(0, 100)}...</span>`);
+                        appendOutput('<span class="error-message">Usage: edit_initial_persona &lt;new_persona_text&gt;</span>');
+                    }
+                    return true;
+                
+                case 'reset_initial_persona':
+                    conversationHistory[0].parts[0].text = initialPersonaPrompt + `\n\nBegin by introducing yourself briefly.`;
+                    appendOutput('<span class="command-output">Maybe\'s initial persona reset to default.</span>', 'system-message');
+                    localStorage.removeItem('maybeCustomInitialPersona'); // Clear custom persona from storage
+                    return true;
+
+                default:
+                    return false; // Not a recognized command
+            }
+        }
+
+
+        // --- Event Listeners ---
 
         terminalInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 sendMessage(terminalInput.value);
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                if (commandHistory.length > 0 && commandHistoryIndex > 0) {
+                    commandHistoryIndex--;
+                    terminalInput.value = commandHistory[commandHistoryIndex];
+                } else if (commandHistory.length > 0 && commandHistoryIndex === 0) {
+                    // Stay at the first item
+                    terminalInput.value = commandHistory[0];
+                }
+            } else if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                if (commandHistoryIndex < commandHistory.length - 1) {
+                    commandHistoryIndex++;
+                    terminalInput.value = commandHistory[commandHistoryIndex];
+                } else {
+                    // Clear input if going past last history item
+                    commandHistoryIndex = commandHistory.length;
+                    terminalInput.value = '';
+                }
             }
         });
 
-        // Initialize the terminal on page load
-        initTerminal();
+        // --- Initialization on Page Load ---
+        window.addEventListener('load', () => {
+            // Load custom initial persona if exists
+            const customPersona = localStorage.getItem('maybeCustomInitialPersona');
+            if (customPersona) {
+                conversationHistory[0].parts[0].text = customPersona;
+            }
+            initTerminal();
+        });
     </script>
 </body>
 </html>
