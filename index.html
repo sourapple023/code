@@ -26,15 +26,15 @@
             --bg-color-light: #3a3a5a;
             --text-color-light: #e0e0e0;
             --text-color-faded: #c0c0c0;
-            --accent-blue: #8be9fd;
-            --accent-yellow: #f1fa8c;
-            --accent-purple: #bd93f9;
-            --accent-green: #50fa7b;
-            --accent-orange: #ffb86c;
-            --accent-red: #ff5555;
+            --accent-blue: #8be9fd; /* light blue */
+            --accent-yellow: #f1fa8c; /* yellow */
+            --accent-purple: #bd93f9; /* purple */
+            --accent-green: #50fa7b; /* green */
+            --accent-orange: #ffb86c; /* orange */
+            --accent-red: #ff5555; /* red */
             --border-color: #4a4a6a;
             --shadow-color: rgba(0, 0, 0, 0.5);
-            --input-focus-shadow: rgba(139, 233, 253, 0.3);
+            --input-focus-shadow: rgba(139, 233, 253, 0.3); /* semi-transparent accent blue */
         }
 
         /* Basic Styles */
@@ -48,6 +48,7 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            line-height: 1.6;
         }
 
         .container {
@@ -59,9 +60,9 @@
             width: 90%;
             max-width: 800px;
             margin-bottom: 20px;
-            display: flex; /* Use flex to arrange sections vertically */
+            display: flex;
             flex-direction: column;
-            gap: 20px; /* Space between sections */
+            gap: 20px;
         }
 
         h1 {
@@ -70,6 +71,7 @@
             margin-bottom: 25px;
             font-size: 2.5em;
             letter-spacing: 1px;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
         }
 
         h2 {
@@ -79,6 +81,16 @@
             margin-bottom: 15px;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 5px;
+            position: relative;
+        }
+        h2::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -1px;
+            width: 50px; /* accent line length */
+            height: 2px;
+            background-color: var(--accent-purple);
         }
 
         label {
@@ -106,6 +118,11 @@
             resize: vertical;
             transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
         }
+        /* Placeholder styling */
+        input::placeholder, textarea::placeholder {
+            color: var(--text-color-faded);
+            opacity: 0.7;
+        }
 
         input[type="password"]:focus,
         input[type="text"].api-key-input:focus,
@@ -113,12 +130,14 @@
             border-color: var(--accent-blue);
             box-shadow: 0 0 0 3px var(--input-focus-shadow);
             outline: none;
+            background-color: var(--bg-color-dark); /* Slightly darker on focus */
         }
         
         input:disabled, textarea:disabled {
             background-color: var(--bg-color-dark);
             color: var(--text-color-faded);
             cursor: not-allowed;
+            opacity: 0.7;
         }
 
         textarea {
@@ -127,7 +146,7 @@
 
         .toggle-password {
             position: absolute;
-            right: 12px; /* Align with input padding */
+            right: 12px;
             top: 50%;
             transform: translateY(-50%);
             background: none;
@@ -172,6 +191,7 @@
             transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
             flex-grow: 1;
             min-width: 120px;
+            font-weight: bold;
         }
 
         button:hover:not(:disabled) {
@@ -187,7 +207,7 @@
         }
 
         button:active:not(:disabled) {
-            transform: translateY(0); /* Press-down effect */
+            transform: translateY(0);
             box-shadow: none;
             background-color: #9d6cd9; /* Slightly darker purple */
         }
@@ -197,6 +217,12 @@
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
+            opacity: 0.6;
+        }
+        
+        #askGeminiButton:disabled {
+            background-color: var(--accent-orange); /* Different disabled color for main action when active/loading */
+            color: var(--bg-color-dark);
         }
 
         #api-key-section {
@@ -214,13 +240,16 @@
             padding: 20px;
             margin-top: 20px;
             min-height: 150px;
-            max-height: 500px; /* Limit height for long responses */
+            max-height: 500px;
             overflow-x: auto;
-            overflow-y: auto; /* Allow vertical scrolling */
+            overflow-y: auto;
             font-size: 0.95em;
             line-height: 1.6;
             word-wrap: break-word;
-            /* tabindex="0" and aria-label are in HTML */
+            white-space: pre-wrap; /* Preserves whitespace and wraps lines */
+            position: relative; /* For copy button positioning */
+            tabindex="0" /* already in HTML */
+            aria-label="OmniAI Response Area" /* already in HTML */
         }
 
         /* Specific styling for markdown elements within response-area */
@@ -258,7 +287,7 @@
             margin: 1em 0;
             font-style: italic;
             color: var(--text-color-faded);
-            background-color: rgba(189, 147, 249, 0.1); /* Slightly tinted background */
+            background-color: rgba(189, 147, 249, 0.1);
             border-radius: 0 5px 5px 0;
         }
         #response-area a {
@@ -268,6 +297,14 @@
         #response-area a:hover {
             text-decoration: underline;
         }
+        #response-area img {
+            max-width: 100%; /* Ensure images are responsive within the response area */
+            height: auto;
+            display: block; /* Remove extra space below image */
+            margin: 1em 0;
+            border-radius: 5px;
+        }
+
 
         /* highlight.js specific overrides for code blocks */
         #response-area pre {
@@ -289,16 +326,16 @@
             font-size: 0.9em;
         }
         #response-area pre code {
-            background-color: transparent; /* Code inside pre shouldn't have its own background */
+            background-color: transparent;
             padding: 0;
-            color: inherit; /* Inherit highlight.js colors */
+            color: inherit;
         }
 
         /* Copy Code Button */
         .copy-code-button {
             position: absolute;
-            top: 5px;
-            right: 5px;
+            top: 8px;
+            right: 8px;
             background-color: rgba(139, 233, 253, 0.2);
             color: var(--accent-blue);
             border: 1px solid var(--accent-blue);
@@ -306,35 +343,56 @@
             border-radius: 4px;
             font-size: 0.8em;
             cursor: pointer;
-            opacity: 0.7;
-            transition: opacity 0.3s ease, background-color 0.3s ease;
+            opacity: 0.8;
+            transition: opacity 0.3s ease, background-color 0.3s ease, color 0.3s ease;
             z-index: 10;
+            line-height: 1; /* Fix height issue */
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
-
         .copy-code-button:hover {
             opacity: 1;
             background-color: var(--accent-blue);
             color: var(--bg-color-dark);
             box-shadow: 0 0 0 2px var(--input-focus-shadow);
         }
-
         .copy-code-button:focus {
             outline: 2px solid var(--accent-blue);
             outline-offset: 2px;
         }
+        .copy-code-button .icon {
+            font-size: 1em; /* Adjust icon size */
+            line-height: 1;
+        }
 
         .status-message {
-            color: var(--accent-red);
             margin-top: 10px;
+            padding: 8px 15px;
+            border-radius: 5px;
             text-align: center;
             font-weight: bold;
-            transition: color 0.3s ease; /* Smooth transition for color changes */
+            transition: all 0.3s ease;
+            color: var(--accent-red);
+            background-color: rgba(255, 85, 85, 0.1);
+            border: 1px solid rgba(255, 85, 85, 0.3);
+            display: block; /* Ensure it takes full width */
         }
         .status-message.success {
             color: var(--accent-green);
+            background-color: rgba(80, 250, 123, 0.1);
+            border: 1px solid rgba(80, 250, 123, 0.3);
         }
         .status-message.warning {
             color: var(--accent-orange);
+            background-color: rgba(255, 184, 108, 0.1);
+            border: 1px solid rgba(255, 184, 108, 0.3);
+        }
+        .status-message:empty { /* Hide if no message */
+            padding: 0;
+            border: none;
+            background-color: transparent;
+            margin-top: 0;
         }
 
         .loading {
@@ -342,6 +400,12 @@
             color: var(--accent-purple);
             text-align: center;
             margin-top: 15px;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.02); }
+            100% { opacity: 0.6; transform: scale(1); }
         }
 
         footer {
@@ -399,7 +463,7 @@
                 margin: 0;
             }
             .toggle-password {
-                right: 12px; /* Keep consistent with input padding */
+                right: 12px;
             }
         }
     </style>
@@ -420,7 +484,7 @@
                 </p>
                 <label for="apiKey">API Key:</label>
                 <div class="input-group">
-                    <input type="password" id="apiKey" class="api-key-input" placeholder="Paste your Google AI API key here" aria-describedby="apiKeyStatus">
+                    <input type="password" id="apiKey" class="api-key-input" placeholder="Paste your Google AI API key here" autocomplete="off" aria-describedby="apiKeyStatus">
                     <button type="button" id="toggleApiKeyVisibility" class="toggle-password" aria-label="Toggle API Key Visibility">👁️</button>
                 </div>
                 <div class="button-group">
@@ -439,7 +503,7 @@
                     <button id="clearPromptButton" aria-label="Clear your prompt input">Clear Prompt</button>
                 </div>
 
-                <div id="loadingIndicator" class="loading" style="display: none;" role="status" aria-live="polite" aria-atomic="true">Thinking...</div>
+                <div id="loadingIndicator" class="loading" style="display: none;" role="status" aria-live="polite" aria-atomic="true" aria-busy="true">Thinking...</div>
                 <p id="geminiStatus" class="status-message" role="status" aria-live="polite" aria-atomic="true"></p>
 
                 <h2>OmniAI's Response:</h2>
@@ -447,7 +511,7 @@
                     <button id="copyResponseButton" disabled aria-label="Copy AI response to clipboard">Copy Response</button>
                     <button id="clearResponseButton" disabled aria-label="Clear AI response area">Clear Response</button>
                 </div>
-                <div id="response-area" tabindex="0" aria-label="OmniAI Response Area">
+                <div id="response-area" tabindex="0" aria-label="OmniAI Response Area" role="log" aria-live="polite">
                     <p>Your AI responses will appear here. The Gemini 1.5 Flash model is designed for high-volume, cost-effective tasks while still offering strong capabilities.</p>
                 </div>
             </section>
@@ -480,12 +544,13 @@
             const clearResponseButton = document.getElementById('clearResponseButton');
 
             // --- Constants ---
-            // Use the recommended alias for Gemini 1.5 Flash
-            const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-latest:generateContent';
+            // Using the recommended alias for Gemini 1.5 Flash, matching the title's intent.
+            const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
             const LOCAL_STORAGE_KEY = 'geminiApiKey';
             const INITIAL_RESPONSE_PLACEHOLDER = '<p>Your AI responses will appear here. The Gemini 1.5 Flash model is designed for high-volume, cost-effective tasks while still offering strong capabilities.</p>';
 
             let currentApiKey = localStorage.getItem(LOCAL_STORAGE_KEY);
+            let isFetching = false; // Prevent multiple concurrent API calls
 
             // --- Marked.js Configuration ---
             marked.setOptions({
@@ -503,12 +568,13 @@
              * Updates a status message element with appropriate styling.
              * @param {HTMLElement} element - The DOM element to update (e.g., apiKeyStatus, geminiStatus).
              * @param {string} message - The message to display.
-             * @param {'success'|'error'|'warning'} type - 'success', 'error', or 'warning'.
+             * @param {'success'|'error'|'warning'|''} type - 'success', 'error', 'warning', or empty for default.
              */
             const setStatusMessage = (element, message, type = 'error') => {
                 element.textContent = message;
                 element.className = `status-message ${type}`;
-                // ARIA attributes are already on the element in HTML, ensuring announcements.
+                element.setAttribute('aria-live', 'polite'); // Ensure screen readers announce new messages
+                element.setAttribute('aria-atomic', 'true'); // Announce the entire region
             };
 
             /**
@@ -518,27 +584,23 @@
             const clearStatusMessage = (element) => {
                 element.textContent = '';
                 element.className = 'status-message'; // Reset to base class
+                element.removeAttribute('aria-live');
+                element.removeAttribute('aria-atomic');
             };
-
-            /**
-             * Simple HTML escaping function for raw error messages (to prevent XSS).
-             * @param {string} str - The string to escape.
-             * @returns {string} The escaped string.
-             */
-            function escapeHTML(str) {
-                const div = document.createElement('div');
-                div.appendChild(document.createTextNode(str));
-                return div.innerHTML;
-            }
 
             /**
              * Enables/disables buttons related to API key management.
              * @param {boolean} enable - True to enable, false to disable.
              */
-            const setApiKeyButtonsEnabled = (enable) => {
+            const setApiKeyInputAndButtonsEnabled = (enable) => {
+                apiKeyInput.disabled = !enable;
                 setApiKeyButton.disabled = !enable;
-                // clearApiKeyButton's display is handled by updateUI, its disabled state is based on `enable`
-                clearApiKeyButton.disabled = !enable;
+                toggleApiKeyVisibilityButton.disabled = !enable;
+                if (!enable) {
+                    clearApiKeyButton.disabled = false; // Clear button can always be active if key exists
+                } else {
+                    clearApiKeyButton.disabled = true; // No key to clear if input is enabled
+                }
             };
 
             /**
@@ -548,6 +610,7 @@
             const setPromptButtonsEnabled = (enable) => {
                 askGeminiButton.disabled = !enable;
                 clearPromptButton.disabled = !enable;
+                promptInput.disabled = !enable;
             };
 
             /**
@@ -572,24 +635,22 @@
                         const code = pre.querySelector('code');
                         if (code) {
                             const copyButton = document.createElement('button');
-                            copyButton.textContent = 'Copy';
+                            copyButton.innerHTML = '<span class="icon">📋</span> Copy';
                             copyButton.className = 'copy-code-button';
                             copyButton.setAttribute('aria-label', 'Copy code to clipboard');
-                            copyButton.setAttribute('role', 'status'); // For screen reader status updates
-                            copyButton.setAttribute('aria-live', 'polite'); // Announce changes
+                            copyButton.setAttribute('role', 'status');
+                            copyButton.setAttribute('aria-live', 'polite');
 
                             copyButton.addEventListener('click', () => {
                                 navigator.clipboard.writeText(code.textContent).then(() => {
-                                    copyButton.textContent = 'Copied!';
+                                    copyButton.innerHTML = '<span class="icon">✅</span> Copied!';
                                     setTimeout(() => {
-                                        copyButton.textContent = 'Copy';
-                                        // No need to explicitly remove role/aria-live;
-                                        // new status messages will replace previous ones.
+                                        copyButton.innerHTML = '<span class="icon">📋</span> Copy';
                                     }, 2000);
                                 }).catch(err => {
                                     console.error('Failed to copy code: ', err);
-                                    copyButton.textContent = 'Error!';
-                                    setTimeout(() => copyButton.textContent = 'Copy', 2000);
+                                    copyButton.innerHTML = '<span class="icon">❌</span> Error!';
+                                    setTimeout(() => copyButton.innerHTML = '<span class="icon">📋</span> Copy', 2000);
                                 });
                             });
                             pre.appendChild(copyButton);
@@ -609,8 +670,8 @@
             const clearResponse = () => {
                 responseArea.innerHTML = INITIAL_RESPONSE_PLACEHOLDER;
                 responseButtonsGroup.style.display = 'none';
-                clearStatusMessage(geminiStatus); // Also clear Gemini status message
-                setResponseActionButtonsEnabled(false); // Ensure buttons are disabled when no response
+                clearStatusMessage(geminiStatus);
+                setResponseActionButtonsEnabled(false);
             };
 
             // --- UI State Management ---
@@ -620,22 +681,22 @@
                     aiInteractionSection.style.display = 'block';
                     setStatusMessage(apiKeyStatus, 'API Key loaded. Ready to chat!', 'success');
                     clearApiKeyButton.style.display = 'inline-block';
-                    apiKeyInput.value = ''; // Clear input after saving
-                    apiKeyInput.disabled = true; // Disable input when key is set
-                    toggleApiKeyVisibilityButton.disabled = true; // Disable toggle when key is hidden/not interactable
-                    promptInput.focus(); // Focus on prompt for immediate interaction
+                    setApiKeyInputAndButtonsEnabled(false); // Input disabled, save button disabled, clear button enabled
+                    apiKeyInput.value = ''; // Ensure input field is clear
+                    apiKeyInput.type = 'password'; // Keep it password type
+                    toggleApiKeyVisibilityButton.textContent = '👁️'; // Reset icon
+                    promptInput.focus();
                 } else {
                     apiKeySection.style.display = 'block';
                     aiInteractionSection.style.display = 'none';
                     setStatusMessage(apiKeyStatus, 'Please enter your API key to begin.', 'warning');
                     clearApiKeyButton.style.display = 'none';
+                    setApiKeyInputAndButtonsEnabled(true); // Input enabled, save button enabled, clear button disabled
                     apiKeyInput.value = '';
-                    apiKeyInput.type = 'password'; // Ensure it's password type when clearing
-                    apiKeyInput.disabled = false; // Enable input when no key is present
-                    toggleApiKeyVisibilityButton.textContent = '👁️'; // Reset icon
-                    toggleApiKeyVisibilityButton.disabled = false;
-                    clearResponse(); // Clear any previous response when key is not set
-                    apiKeyInput.focus(); // Focus on API key input for entry
+                    apiKeyInput.type = 'password';
+                    toggleApiKeyVisibilityButton.textContent = '👁️';
+                    clearResponse();
+                    apiKeyInput.focus();
                 }
             };
 
@@ -648,13 +709,12 @@
                     setStatusMessage(apiKeyStatus, 'API Key saved successfully!', 'success');
                     updateUI();
                 } else {
-                    setStatusMessage(apiKeyStatus, 'API Key cannot be empty.');
+                    setStatusMessage(apiKeyStatus, 'API Key cannot be empty.', 'error');
                     apiKeyInput.focus();
                 }
             });
 
             clearApiKeyButton.addEventListener('click', () => {
-                // Confirm with user if they really want to clear a saved key
                 if (!confirm('Are you sure you want to clear your saved API key? You will need to re-enter it to use OmniAI.')) {
                     return;
                 }
@@ -667,32 +727,41 @@
             toggleApiKeyVisibilityButton.addEventListener('click', () => {
                 if (apiKeyInput.type === 'password') {
                     apiKeyInput.type = 'text';
-                    toggleApiKeyVisibilityButton.textContent = '🙈'; // Closed eye
+                    toggleApiKeyVisibilityButton.textContent = '🙈';
                     toggleApiKeyVisibilityButton.setAttribute('aria-label', 'Hide API Key');
                 } else {
                     apiKeyInput.type = 'password';
-                    toggleApiKeyVisibilityButton.textContent = '👁️'; // Open eye
+                    toggleApiKeyVisibilityButton.textContent = '👁️';
                     toggleApiKeyVisibilityButton.setAttribute('aria-label', 'Show API Key');
                 }
             });
 
             askGeminiButton.addEventListener('click', async () => {
+                if (isFetching) {
+                    setStatusMessage(geminiStatus, 'Please wait for the current response.', 'warning');
+                    return;
+                }
+
                 const prompt = promptInput.value.trim();
                 if (!currentApiKey) {
-                    setStatusMessage(geminiStatus, 'Error: API Key not set.');
+                    setStatusMessage(geminiStatus, 'Error: API Key not set. Please save your API key first.', 'error');
                     return;
                 }
                 if (!prompt) {
-                    setStatusMessage(geminiStatus, 'Error: Please enter a prompt.');
+                    setStatusMessage(geminiStatus, 'Error: Please enter a prompt.', 'error');
                     promptInput.focus();
                     return;
                 }
 
+                isFetching = true;
                 loadingIndicator.style.display = 'block';
+                loadingIndicator.setAttribute('aria-busy', 'true');
                 clearStatusMessage(geminiStatus);
-                clearResponse(); // Clear previous response content and related buttons
+                clearResponse();
 
-                setPromptButtonsEnabled(false); // Disable prompt-related buttons
+                setPromptButtonsEnabled(false);
+                askGeminiButton.textContent = 'Asking...'; // Visual feedback on button
+                askGeminiButton.disabled = true; // Re-disable to ensure visual state
 
                 try {
                     const response = await fetch(`${GEMINI_API_URL}?key=${currentApiKey}`, {
@@ -702,8 +771,6 @@
                         },
                         body: JSON.stringify({
                             contents: [{ parts: [{ text: prompt }] }],
-                            // Safety settings can be adjusted here. BLOCK_NONE allows more raw output.
-                            // For a public facing app, consider more restrictive settings.
                             safetySettings: [
                                 { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
                                 { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
@@ -732,11 +799,11 @@
                         renderMarkdownResponse(aiText);
                     } else if (data.promptFeedback && data.promptFeedback.blockReason) {
                          const blockedReason = data.promptFeedback.blockReason;
-                         const safetyRatings = data.promptFeedback.safetyRatings.map(s => `<li>${s.category}: <strong>${s.probability}</strong></li>`).join('');
+                         const safetyRatings = data.promptFeedback.safetyRatings.map(s => `<li><strong>${s.category}:</strong> ${s.probability}</li>`).join('');
                          responseArea.innerHTML = `<p class="status-message warning"><strong>Response Blocked:</strong> The model's response was blocked due to safety concerns (Reason: ${blockedReason}).</p><p class="status-message warning">Safety Ratings:</p><ul>${safetyRatings}</ul>`;
-                         responseButtonsGroup.style.display = 'flex'; // Show buttons so user can clear the blocked message
-                         copyResponseButton.disabled = true; // Cannot copy blocked content
-                         clearResponseButton.disabled = false; // Can clear the message
+                         responseButtonsGroup.style.display = 'flex';
+                         copyResponseButton.disabled = true;
+                         clearResponseButton.disabled = false;
                     } else {
                         responseArea.innerHTML = '<p class="status-message warning">No valid response received from Gemini.</p>';
                         responseButtonsGroup.style.display = 'flex';
@@ -746,26 +813,35 @@
 
                 } catch (error) {
                     console.error('Gemini API Error:', error);
-                    setStatusMessage(geminiStatus, `Error: ${error.message}`);
-                    responseArea.innerHTML = `<p class="status-message error">Failed to get a response. Please check your API key, prompt, and network connection.</p><p class="status-message error">Details: ${escapeHTML(error.message)}</p>`;
+                    setStatusMessage(geminiStatus, `Error: ${error.message}`, 'error');
+                    responseArea.innerHTML = `<p class="status-message error">Failed to get a response. Please check your API key, prompt, and network connection.</p><p class="status-message error">Details: ${error.message}</p>`;
                     responseButtonsGroup.style.display = 'flex';
                     copyResponseButton.disabled = true;
-                    clearResponseButton.disabled = false; // Allow clearing the error message
+                    clearResponseButton.disabled = false;
                 } finally {
+                    isFetching = false;
                     loadingIndicator.style.display = 'none';
-                    setPromptButtonsEnabled(true); // Re-enable prompt-related buttons
+                    loadingIndicator.removeAttribute('aria-busy');
+                    setPromptButtonsEnabled(true);
+                    askGeminiButton.textContent = 'Ask OmniAI'; // Reset button text
+                }
+            });
+
+            promptInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault(); // Prevent new line
+                    askGeminiButton.click(); // Trigger button click
                 }
             });
 
             clearPromptButton.addEventListener('click', () => {
                 promptInput.value = '';
                 clearStatusMessage(geminiStatus);
-                clearResponse(); // Also clear the response when clearing the prompt
+                clearResponse();
                 promptInput.focus();
             });
 
             copyResponseButton.addEventListener('click', async () => {
-                // Get the plain text content, excluding the dynamically added copy buttons
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = responseArea.innerHTML;
                 tempDiv.querySelectorAll('.copy-code-button').forEach(btn => btn.remove());
@@ -785,7 +861,7 @@
             // Initial setup on page load
             const init = () => {
                 updateUI();
-                clearResponse(); // Ensure response area is clean initially with placeholder
+                clearResponse();
             };
 
             init();
