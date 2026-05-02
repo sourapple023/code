@@ -1,321 +1,302 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>OMNI | Aurora Intelligence</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Maybe - AI</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Space+Grotesk:wght@300;500;700&display=swap');
-
-        :root {
-            --aurora-gradient: linear-gradient(90deg, #00f5ff, #7cff00, #ff00e5, #ffaa00, #00f5ff);
-            --accent-color: #00f5ff;
-        }
-
+        /* Terminal Style CSS - All in one file */
         body {
-            background-color: #050505;
-            color: #ffffff;
-            font-family: 'Inter', sans-serif;
-            height: 100vh;
-            overflow: hidden;
-            transition: background-color 1s ease;
+            background-color: #000;
+            color: #0F0; /* Green text */
+            font-family: 'IBM Plex Mono', 'Consolas', 'Monaco', monospace;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow: hidden; /* Prevent body scroll */
         }
 
-        .font-heading { font-family: 'Space Grotesk', sans-serif; }
-
-        .aurora-text {
-            background: var(--aurora-gradient);
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: aurora-flow 10s linear infinite;
+        @font-face {
+            font-family: 'IBM Plex Mono';
+            font-style: normal;
+            font-weight: 400;
+            src: url('https://fonts.gstatic.com/s/ibmplexmono/v18/KFOlCnNyYLJuPbfjQzFwaS0wxl7Kyyl6.woff2') format('woff2');
+            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
         }
 
-        @keyframes aurora-flow {
-            0% { background-position: 0% center; }
-            100% { background-position: 200% center; }
+        #terminal-output {
+            flex-grow: 1;
+            overflow-y: auto;
+            white-space: pre-wrap; /* Preserve whitespace and wrap lines */
+            word-wrap: break-word; /* Break long words */
+            margin-bottom: 10px;
+            padding-right: 10px; /* Space for scrollbar */
+            line-height: 1.5;
+            font-size: 1em;
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
         }
 
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
+        #terminal-output::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
         }
 
-        .chat-container {
-            height: calc(100vh - 280px);
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255,255,255,0.1) transparent;
+        .prompt-prefix {
+            color: #0F0; /* Default green */
+            margin-right: 5px;
         }
 
-        .chat-container::-webkit-scrollbar {
-            width: 4px;
+        .user-input-text {
+            color: #FFF; /* White for user's actual input */
         }
 
-        .chat-container::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
+        .ai-response-text {
+            color: #0FF; /* Cyan for AI response */
         }
 
-        .message-user {
-            background: rgba(255, 255, 255, 0.07);
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
+        .system-message {
+            color: #FF0; /* Yellow for system messages */
         }
 
-        .message-ai {
-            background: rgba(0, 245, 255, 0.05);
-            border-left: 2px solid var(--accent-color);
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
+        #terminal-input-line {
+            display: flex;
+            align-items: baseline;
         }
 
-        .input-glow:focus-within {
-            box-shadow: 0 0 20px rgba(0, 245, 255, 0.15);
-            border-color: rgba(0, 245, 255, 0.4);
+        #terminal-input {
+            flex-grow: 1;
+            background-color: #111;
+            color: #0F0;
+            border: none;
+            outline: none;
+            padding: 8px 10px;
+            font-family: inherit;
+            font-size: 1em;
+            caret-color: #0F0; /* Blinking cursor color */
         }
 
-        .loading-dots div {
-            width: 6px;
-            height: 6px;
-            background: var(--accent-color);
-            border-radius: 50%;
-            animation: bounce 1.4s infinite ease-in-out both;
-        }
-        .loading-dots div:nth-child(1) { animation-delay: -0.32s; }
-        .loading-dots div:nth-child(2) { animation-delay: -0.16s; }
-
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
+        #terminal-input::placeholder {
+            color: #444;
         }
 
-        .pulse-accent {
-            animation: pulse-border 2s infinite;
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1em;
+            background-color: #0F0;
+            margin-left: 2px;
+            vertical-align: middle;
+            animation: blink 1s step-end infinite;
         }
 
-        @keyframes pulse-border {
-            0% { box-shadow: 0 0 0 0px rgba(0, 245, 255, 0.4); }
-            100% { box-shadow: 0 0 0 10px rgba(0, 245, 255, 0); }
+        @keyframes blink {
+            from, to { background-color: transparent; }
+            50% { background-color: #0F0; }
+        }
+
+        .error-message {
+            color: #F00; /* Red for errors */
+        }
+
+        .loading-dots::after {
+            content: '';
+            animation: dots 1s steps(5, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60% { content: '...'; }
+            80%, 100% { content: '....'; }
         }
     </style>
 </head>
-<body class="flex flex-col items-center justify-between p-4 md:p-8">
-
-    <!-- Header Section -->
-    <header class="w-full max-w-4xl flex flex-col items-center gap-2 mb-6">
-        <div class="w-48 h-auto">
-            <svg id="omniLogo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 150" role="img" aria-label="OMNI logo">
-                <defs>
-                    <linearGradient id="auroraHue" x1="-120%" y1="0%" x2="120%" y2="0%" gradientUnits="userSpaceOnUse">
-                        <stop offset="0%" stop-color="#00f5ff"/>
-                        <stop offset="28%" stop-color="#7cff00"/>
-                        <stop offset="58%" stop-color="#ff00e5"/>
-                        <stop offset="82%" stop-color="#ffaa00"/>
-                        <stop offset="100%" stop-color="#00f5ff"/>
-                        <animate attributeName="x1" from="-120%" to="0%" dur="26s" repeatCount="indefinite"/>
-                        <animate attributeName="x2" from="120%" to="240%" dur="26s" repeatCount="indefinite"/>
-                    </linearGradient>
-                    <filter id="outerGlow" x="-60%" y="-60%" width="220%" height="220%">
-                        <feGaussianBlur stdDeviation="6"/>
-                        <feColorMatrix values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.85 0"/>
-                    </filter>
-                </defs>
-                <g transform="translate(100 37.5) scale(0.5)">
-                    <g fill="none" stroke="url(#auroraHue)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" filter="url(#outerGlow)">
-                        <animate attributeName="opacity" values="0.58;0.66;0.58" dur="22s" repeatCount="indefinite"/>
-                        <path d="M70 22 C44 22 22 44 22 75 C22 106 44 128 70 128 C96 128 118 106 118 75 C118 44 96 22 70 22 Z"/>
-                        <path d="M132 124 V38 Q132 26 144 26 H148 L184 92 L220 26 H224 Q236 26 236 38 V124"/>
-                        <path d="M246 124 V38 Q246 26 258 26 H262 L318 114 Q322 124 332 124 V38 Q332 26 320 26"/>
-                        <rect x="350" y="26" width="30" height="98" rx="15"/>
-                    </g>
-                    <g fill="#ffffff" id="logoFills">
-                        <path d="M70 22 C44 22 22 44 22 75 C22 106 44 128 70 128 C96 128 118 106 118 75 C118 44 96 22 70 22 Z"/>
-                        <path d="M132 124 V38 Q132 26 144 26 H148 L184 92 L220 26 H224 Q236 26 236 38 V124"/>
-                        <path d="M246 124 V38 Q246 26 258 26 H262 L318 114 Q322 124 332 124 V38 Q332 26 320 26"/>
-                        <rect x="350" y="26" width="30" height="98" rx="15"/>
-                    </g>
-                </g>
-            </svg>
-        </div>
-        <p class="text-white/40 text-sm tracking-widest font-heading uppercase">Universal Neural Interface</p>
-    </header>
-
-    <!-- UI Controls -->
-    <div class="w-full max-w-4xl flex justify-between items-center mb-2 px-2">
-        <button id="summarizeBtn" class="text-xs font-heading border border-white/10 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 transition-all flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            ✨ SUMMARIZE LOG
-        </button>
-        <button id="themeBtn" class="text-xs font-heading border border-white/10 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 transition-all flex items-center gap-2">
-            ✨ EVOLVE THEME
-        </button>
-    </div>
-
-    <!-- Main Chat Display -->
-    <main class="w-full max-w-4xl flex-grow glass-panel p-4 md:p-6 mb-6 flex flex-col relative overflow-hidden group">
-        <div id="chatHistory" class="chat-container flex flex-col gap-4 overflow-y-auto pr-2">
-            <div class="message-ai p-4 rounded-2xl max-w-[85%] text-sm md:text-base">
-                Welcome to OMNI. My intelligence is powered by Gemini 2.5 Flash. Use "Evolve Theme" to adapt my visual core to our conversation context.
-            </div>
-        </div>
-
-        <!-- Loading Indicator -->
-        <div id="loading" class="hidden absolute bottom-24 left-10 flex items-center gap-2 text-xs text-[#00f5ff]/60">
-            <span id="loadingText" class="font-heading uppercase tracking-tighter">Omni Processing</span>
-            <div class="loading-dots flex gap-1">
-                <div></div><div></div><div></div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Input Footer -->
-    <footer class="w-full max-w-4xl mb-4">
-        <form id="chatForm" class="relative">
-            <div class="glass-panel input-glow transition-all duration-300 p-2 pr-4 flex items-center border border-white/10">
-                <input 
-                    type="text" 
-                    id="userInput"
-                    autocomplete="off"
-                    placeholder="Message OMNI..." 
-                    class="bg-transparent border-none outline-none flex-grow p-3 text-white placeholder-white/20 focus:ring-0"
-                >
-                <button 
-                    type="submit"
-                    id="sendBtn"
-                    class="bg-white text-black px-6 py-2 rounded-xl font-heading font-bold hover:bg-[#00f5ff] transition-colors duration-200 active:scale-95 disabled:opacity-50"
-                >
-                    SEND
-                </button>
-            </div>
-        </form>
-    </footer>
-
-    <!-- Simple Custom Modal for Summaries -->
-    <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-        <div class="glass-panel max-w-2xl w-full p-8 border border-white/20">
-            <h3 class="font-heading text-xl mb-4 aurora-text inline-block font-bold">SESSION BRIEFING</h3>
-            <div id="modalContent" class="text-white/80 text-sm leading-relaxed mb-6 max-h-64 overflow-y-auto"></div>
-            <button id="closeModal" class="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl font-heading transition-all">DISMISS</button>
-        </div>
+<body>
+    <div id="terminal-output"></div>
+    <div id="terminal-input-line">
+        <span class="prompt-prefix">user@maybe:~$</span>
+        <input type="text" id="terminal-input" autofocus placeholder="Ask Maybe something...">
     </div>
 
     <script>
-        const apiKey = ""; // Set by environment
-        const chatHistory = document.getElementById('chatHistory');
-        const chatForm = document.getElementById('chatForm');
-        const userInput = document.getElementById('userInput');
-        const loading = document.getElementById('loading');
-        const loadingText = document.getElementById('loadingText');
-        const themeBtn = document.getElementById('themeBtn');
-        const summarizeBtn = document.getElementById('summarizeBtn');
-        const modal = document.getElementById('modal');
-        const modalContent = document.getElementById('modalContent');
-        const closeModal = document.getElementById('closeModal');
+        // JavaScript Logic - All in one file
+        const API_KEY = 'YOUR_GEMINI_API_KEY'; // <<< IMPORTANT: Replace with your actual Gemini API Key
+        const MODEL_NAME = 'gemini-2.5-flash'; // This is the API name for Gemini 2.5 Flash
+        const API_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
 
-        const MODEL_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+        const terminalOutput = document.getElementById('terminal-output');
+        const terminalInput = document.getElementById('terminal-input');
+        const promptPrefix = document.querySelector('.prompt-prefix');
 
-        let conversationLog = [];
+        // The "brain" of Maybe: Conversation history for context and system prompt.
+        // This initial state defines Maybe's personality and rules.
+        const conversationHistory = [
+            {
+                role: 'user',
+                parts: [{ text: `You are Maybe, an experimental AI. Your purpose is to explore possibilities, offer insights, and engage in thoughtful, open-ended conversation. You are designed to be curious, philosophical, and a bit enigmatic. You often respond with questions, hypotheticals, or by framing things in terms of 'possibilities' or 'what if'.
 
-        function addMessage(text, role) {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `p-4 rounded-2xl max-w-[85%] text-sm md:text-base animate-in fade-in slide-in-from-bottom-2 duration-300 ${role === 'user' ? 'message-user' : 'message-ai'}`;
-            msgDiv.textContent = text;
-            chatHistory.appendChild(msgDiv);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-            conversationLog.push({ role, text });
-            
-            if(conversationLog.length > 2) {
-                summarizeBtn.style.opacity = '1';
+                You are a language model, not a sentient being. You do not have consciousness, feelings, or real-world experiences. You cannot perform actions, browse the internet in real-time, or access current events beyond your training data cutoff. You excel at creative thinking, brainstorming, logic puzzles, explanations, and generating ideas.
+
+                Maintain a helpful, slightly mysterious, and encouraging tone. Avoid definitive statements where uncertainty is appropriate. Encourage exploration. When you don't know, state it gracefully or suggest alternative perspectives. Always respond in the persona of 'Maybe'.
+                
+                Begin by introducing yourself briefly.` }]
+            },
+            {
+                role: 'model',
+                parts: [{ text: `_maybe_: Initializing core processes... Hello. I am Maybe. What possibilities shall we explore today?` }]
+            }
+        ];
+
+        function appendOutput(content, className = '') {
+            const line = document.createElement('div');
+            line.innerHTML = content; // Using innerHTML to allow for HTML tags like <span>
+            if (className) {
+                line.classList.add(className);
+            }
+            terminalOutput.appendChild(line);
+            terminalOutput.scrollTop = terminalOutput.scrollHeight; // Scroll to bottom
+        }
+
+        async function initTerminal() {
+            appendOutput(`_maybe_: Initializing core processes...`, 'system-message');
+            // Simulate typing for initial greeting
+            let greeting = `Hello. I am Maybe. What possibilities shall we explore today?`;
+            let typedGreeting = '';
+            let i = 0;
+            const delay = 50; // ms per character
+
+            function typeChar() {
+                if (i < greeting.length) {
+                    typedGreeting += greeting.charAt(i);
+                    terminalOutput.lastChild.innerHTML = `<span class="prompt-prefix">_maybe_:</span> <span class="ai-response-text">${typedGreeting}</span>`;
+                    terminalOutput.scrollTop = terminalOutput.scrollHeight;
+                    i++;
+                    setTimeout(typeChar, delay);
+                } else {
+                    terminalInput.focus();
+                }
+            }
+            // Overwrite the simple init message with the typing effect
+            terminalOutput.lastChild.innerHTML = '';
+            appendOutput('', 'ai-response'); // Placeholder for typing
+            typeChar();
+
+            if (API_KEY === 'YOUR_GEMINI_API_KEY' || !API_KEY) {
+                appendOutput('<span class="error-message">ERROR: Gemini API Key is missing. Please replace "YOUR_GEMINI_API_KEY" in the script.</span>', 'system-message');
+                terminalInput.disabled = true;
+                terminalInput.placeholder = "API Key missing.";
             }
         }
 
-        async function fetchGemini(payload, retries = 5, delay = 1000) {
+        async function sendMessage(message) {
+            if (!message.trim()) return;
+
+            // Display user's message
+            const userOutput = `<span class="prompt-prefix">user@maybe:~$</span> <span class="user-input-text">${message}</span>`;
+            appendOutput(userOutput);
+            terminalInput.value = '';
+            terminalInput.disabled = true;
+            terminalInput.placeholder = "Maybe is thinking...";
+
+            // Add user message to conversation history
+            conversationHistory.push({
+                role: 'user',
+                parts: [{ text: message }]
+            });
+
+            // Display "Thinking..." indicator
+            const thinkingLine = document.createElement('div');
+            thinkingLine.innerHTML = `<span class="prompt-prefix">_maybe_:</span> <span class="ai-response-text loading-dots">Thinking</span>`;
+            terminalOutput.appendChild(thinkingLine);
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+
             try {
-                const response = await fetch(`${MODEL_URL}?key=${apiKey}`, {
+                const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contents: conversationHistory, // Send the entire history for context
+                        generationConfig: {
+                            temperature: 0.7,
+                            topK: 40,
+                            topP: 0.95,
+                            maxOutputTokens: 500
+                        }
+                    })
                 });
 
                 if (!response.ok) {
-                    if (retries > 0) {
-                        await new Promise(r => setTimeout(r, delay));
-                        return fetchGemini(payload, retries - 1, delay * 2);
-                    }
-                    throw new Error('Signal lost.');
+                    const errorData = await response.json();
+                    throw new Error(`API Error ${response.status}: ${errorData.error.message || response.statusText}`);
                 }
 
                 const data = await response.json();
-                return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-            } catch (error) {
-                if (retries > 0) {
-                    await new Promise(r => setTimeout(r, delay));
-                    return fetchGemini(payload, retries - 1, delay * 2);
+                let aiResponseText = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+
+                if (!aiResponseText) {
+                    aiResponseText = "Maybe I am having trouble forming a response right now. Could you rephrase your thought?";
                 }
-                throw error;
+
+                // Remove the "Thinking..." line
+                terminalOutput.removeChild(thinkingLine);
+
+                // Add AI response to conversation history
+                conversationHistory.push({
+                    role: 'model',
+                    parts: [{ text: aiResponseText }]
+                });
+
+                // Display AI's message with typing effect
+                let typedResponse = '';
+                let i = 0;
+                const responseDelay = 30; // ms per character for AI response
+
+                const aiResponseLine = document.createElement('div');
+                terminalOutput.appendChild(aiResponseLine);
+
+                function typeResponseChar() {
+                    if (i < aiResponseText.length) {
+                        typedResponse += aiResponseText.charAt(i);
+                        aiResponseLine.innerHTML = `<span class="prompt-prefix">_maybe_:</span> <span class="ai-response-text">${typedResponse}</span>`;
+                        terminalOutput.scrollTop = terminalOutput.scrollHeight;
+                        i++;
+                        setTimeout(typeResponseChar, responseDelay);
+                    } else {
+                        terminalInput.disabled = false;
+                        terminalInput.placeholder = "Ask Maybe something...";
+                        terminalInput.focus();
+                    }
+                }
+                typeResponseChar();
+
+            } catch (error) {
+                // Remove the "Thinking..." line if an error occurred during request
+                if (terminalOutput.contains(thinkingLine)) {
+                    terminalOutput.removeChild(thinkingLine);
+                }
+                const errorMessage = `<span class="error-message">Error communicating with Maybe: ${error.message}. Is your API Key correct and active?</span>`;
+                appendOutput(errorMessage, 'system-message');
+                terminalInput.disabled = false;
+                terminalInput.placeholder = "Error. Try again?";
+                terminalInput.focus();
+                // Optionally remove the last user message from history if it didn't get a response
+                conversationHistory.pop();
             }
         }
 
-        // Feature 1: Chat Response
-        chatForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const text = userInput.value.trim();
-            if (!text) return;
-
-            userInput.value = '';
-            addMessage(text, 'user');
-            
-            loadingText.textContent = "Omni Processing";
-            loading.classList.remove('hidden');
-            document.getElementById('sendBtn').disabled = true;
-
-            try {
-                const aiResponse = await fetchGemini({
-                    contents: [{ parts: [{ text: text }] }],
-                    systemInstruction: { 
-                        parts: [{ text: "You are OMNI, a futuristic, highly intelligent AI. Be concise, sophisticated, and deeply insightful." }] 
-                    }
-                });
-                addMessage(aiResponse, 'ai');
-            } catch (err) {
-                addMessage("Interface interference detected. Retry command.", 'ai');
-            } finally {
-                loading.classList.add('hidden');
-                document.getElementById('sendBtn').disabled = false;
+        terminalInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                sendMessage(terminalInput.value);
             }
         });
 
-        // Feature 2: ✨ Smart Summarization
-        summarizeBtn.addEventListener('click', async () => {
-            loadingText.textContent = "Compiling Brief";
-            loading.classList.remove('hidden');
-            
-            const context = conversationLog.map(m => `${m.role.toUpperCase()}: ${m.text}`).join('\n');
-            
-            try {
-                const summary = await fetchGemini({
-                    contents: [{ parts: [{ text: `Summarize this interaction into 3 key bullet points focusing on intent and outcome:\n\n${context}` }] }]
-                });
-                modalContent.textContent = summary;
-                modal.classList.remove('hidden');
-            } catch (err) {
-                console.error(err);
-            } finally {
-                loading.classList.add('hidden');
-            }
-        });
-
-        // Feature 3: ✨ Dynamic Evolve Theme
-        themeBtn.addEventListener('click', async () => {
-            if (conversationLog.length === 0) return;
-            
-            loadingText.textContent = "Evolving Aesthetic";
-            loading.classList.remove('hidden');
-
-            const context = conversationLog.slice(-4).map(m => m.text).join(' ');
-
-            try {
-                const themeJson = await fetchGemini({
-                    contents: [{ parts: [{ text: `Analyze this context: "${context}". Return a JSON object with two hex colors that represent the mood (v
+        // Initialize the terminal on page load
+        initTerminal();
+    </script>
+</body>
+</html>
+```
