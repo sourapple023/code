@@ -1,11 +1,11 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="OmniAI - Gemini 2.5 Flash Explorer (Hypothetical). Interact directly with a hypothetical Google Gemini 2.5 Flash AI model in your browser.">
     <title>OmniAI - Gemini 2.5 Flash Explorer (Hypothetical)</title>
-    <!-- Favicon (Optional, but good for branding) -->
+    <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
 
     <!-- marked.js for Markdown parsing (official CDN) -->
@@ -22,25 +22,37 @@
 
         /* CSS Variables for easier theme management */
         :root {
-            --bg-color-dark: #1a1a2e;
-            --bg-color-medium: #2a2a4a;
-            --bg-color-light: #3a3a5a;
-            --text-color-light: #e0e0e0;
-            --text-color-faded: #c0c0c0;
-            --accent-blue: #8be9fd; /* light blue */
-            --accent-yellow: #f1fa8c; /* yellow */
-            --accent-purple: #bd93f9; /* purple */
-            --accent-green: #50fa7b; /* green */
-            --accent-orange: #ffb86c; /* orange */
-            --accent-red: #ff5555; /* red */
-            --border-color: #4a4a6a;
-            --shadow-color: rgba(0, 0, 0, 0.5);
-            --input-focus-shadow: rgba(139, 233, 253, 0.3); /* semi-transparent accent blue */
+            /* Deeper, more saturated dark theme */
+            --bg-color-dark: #1A1B26; /* Darker background */
+            --bg-color-medium: #24283B; /* Main container background */
+            --bg-color-light: #363B51; /* Input fields, code blocks, cards */
+            
+            --text-color-light: #E0E0E0; /* Primary text */
+            --text-color-faded: #A9B1D6; /* Secondary/placeholder text */
+            --text-color-highlight: #C0CAF5; /* Slightly brighter for emphasis */
+
+            /* Accent colors - inspired by Dracula, with slight tweaks for vibrancy */
+            --accent-blue: #7AA2F7; /* Blue for links, primary highlights */
+            --accent-yellow: #E0AF68; /* Yellow for warnings, secondary highlights */
+            --accent-purple: #BB99FF; /* Purple for buttons, decorative elements */
+            --accent-green: #9ECE6A; /* Green for success */
+            --accent-orange: #FF9E64; /* Orange for active states, warnings */
+            --accent-red: #F7768E; /* Red for errors */
+            
+            --border-color: #414868; /* Subtle border for separation */
+            --shadow-color: rgba(0, 0, 0, 0.7); /* Deeper shadow */
+            --input-focus-shadow: rgba(122, 162, 247, 0.4); /* Accent blue glow */
+
+            --transition-speed: 0.2s ease-in-out;
         }
 
         /* Basic Styles */
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
             margin: 0;
             padding: 20px;
             background-color: var(--bg-color-dark);
@@ -50,114 +62,134 @@
             align-items: center;
             min-height: 100vh;
             line-height: 1.6;
+            text-rendering: optimizeLegibility; /* Improves text readability */
         }
 
         .container {
             background-color: var(--bg-color-medium);
             border: 1px solid var(--border-color);
-            border-radius: 10px;
-            box-shadow: 0 4px 20px var(--shadow-color);
+            border-radius: 12px;
+            box-shadow: 0 8px 30px var(--shadow-color);
             padding: 30px;
             width: 90%;
-            max-width: 800px;
-            margin-bottom: 20px;
+            max-width: 850px; /* Slightly wider max-width */
+            margin-bottom: 25px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 25px; /* Increased spacing between sections */
+            transition: transform var(--transition-speed);
+        }
+
+        .container:hover {
+            transform: translateY(-3px); /* Subtle lift on hover */
         }
 
         h1 {
             color: var(--accent-blue);
             text-align: center;
+            margin-top: 0; /* Adjusted from initial setup */
             margin-bottom: 25px;
-            font-size: 2.5em;
+            font-size: 2.8em;
             letter-spacing: 1px;
-            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            font-weight: 800;
+            text-transform: uppercase; /* More impactful */
+            text-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+            line-height: 1.2;
+        }
+
+        p {
+            color: var(--text-color-faded);
         }
 
         h2 {
             color: var(--accent-yellow);
-            font-size: 1.4em;
-            margin-top: 25px;
+            font-size: 1.6em;
+            margin-top: 30px; /* More vertical space */
             margin-bottom: 15px;
             border-bottom: 1px solid var(--border-color);
-            padding-bottom: 5px;
+            padding-bottom: 8px;
             position: relative;
+            letter-spacing: 0.5px;
         }
         h2::after {
             content: '';
             position: absolute;
             left: 0;
             bottom: -1px;
-            width: 50px; /* accent line length */
-            height: 2px;
+            width: 60px; /* Accent line length */
+            height: 3px; /* Thicker accent line */
             background-color: var(--accent-purple);
+            border-radius: 2px;
         }
 
         label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: var(--text-color-light);
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--text-color-highlight);
+            font-size: 1.05em;
         }
 
         .input-group {
             position: relative;
-            margin-bottom: 15px;
+            margin-bottom: 20px; /* More spacing */
         }
 
         input[type="password"],
         input[type="text"].api-key-input,
         textarea {
             width: 100%;
-            padding: 12px;
+            padding: 14px; /* Larger padding */
             border: 1px solid var(--border-color);
-            border-radius: 6px;
+            border-radius: 8px; /* Softer corners */
             background-color: var(--bg-color-light);
             color: var(--text-color-light);
-            font-size: 1em;
+            font-size: 1.05em;
             resize: vertical;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+            transition: border-color var(--transition-speed), box-shadow var(--transition-speed), background-color var(--transition-speed);
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); /* Subtle inner shadow */
         }
         /* Placeholder styling */
         input::placeholder, textarea::placeholder {
             color: var(--text-color-faded);
-            opacity: 0.7;
+            opacity: 0.8;
         }
 
         input[type="password"]:focus,
         input[type="text"].api-key-input:focus,
         textarea:focus {
             border-color: var(--accent-blue);
-            box-shadow: 0 0 0 3px var(--input-focus-shadow);
+            box-shadow: 0 0 0 4px var(--input-focus-shadow); /* More prominent focus glow */
             outline: none;
             background-color: var(--bg-color-dark); /* Slightly darker on focus */
         }
         
         input:disabled, textarea:disabled {
-            background-color: var(--bg-color-dark);
+            background-color: var(--bg-color-light);
             color: var(--text-color-faded);
             cursor: not-allowed;
             opacity: 0.7;
+            box-shadow: none; /* Remove inner shadow when disabled */
         }
 
         textarea {
-            min-height: 100px;
+            min-height: 120px; /* Slightly taller */
         }
 
         .toggle-password {
             position: absolute;
-            right: 12px;
+            right: 15px; /* Adjust position */
             top: 50%;
             transform: translateY(-50%);
             background: none;
             border: none;
             color: var(--text-color-faded);
             cursor: pointer;
-            font-size: 1.1em;
-            padding: 5px;
+            font-size: 1.2em; /* Larger icon */
+            padding: 8px; /* Larger hit area */
             line-height: 1;
-            transition: color 0.3s ease;
+            transition: color var(--transition-speed);
+            border-radius: 5px; /* For focus outline */
         }
 
         .toggle-password:hover:not(:disabled) {
@@ -165,8 +197,8 @@
         }
         .toggle-password:focus:not(:disabled) {
             outline: 2px solid var(--accent-blue);
-            outline-offset: 2px;
-            border-radius: 3px;
+            outline-offset: 3px;
+            background-color: rgba(122, 162, 247, 0.1);
         }
         .toggle-password:disabled {
             cursor: not-allowed;
@@ -175,42 +207,44 @@
 
         .button-group {
             margin-top: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 12px; /* Slightly increased gap */
         }
 
         button {
             background-color: var(--accent-purple);
             color: white;
-            padding: 12px 20px;
+            padding: 14px 25px; /* Larger padding */
             border: none;
-            border-radius: 6px;
+            border-radius: 8px; /* Softer corners */
             cursor: pointer;
-            font-size: 1em;
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            font-size: 1.05em;
+            transition: background-color var(--transition-speed), transform 0.2s ease, box-shadow 0.2s ease;
             flex-grow: 1;
-            min-width: 120px;
+            min-width: 130px;
             font-weight: bold;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); /* Subtle button shadow */
         }
 
         button:hover:not(:disabled) {
-            background-color: var(--accent-blue);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background-color: var(--accent-blue); /* Changes to blue on hover */
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
         }
         
         button:focus:not(:disabled) {
-            outline: 2px solid var(--accent-blue);
-            outline-offset: 2px;
-            box-shadow: 0 0 0 3px var(--input-focus-shadow);
+            outline: 3px solid var(--accent-blue);
+            outline-offset: 3px;
+            box-shadow: 0 0 0 4px var(--input-focus-shadow);
         }
 
         button:active:not(:disabled) {
             transform: translateY(0);
-            box-shadow: none;
-            background-color: #9d6cd9; /* Slightly darker purple */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            background-color: #8D7BBE; /* Slightly darker purple */
         }
 
         button:disabled {
@@ -224,6 +258,13 @@
         #askGeminiButton:disabled {
             background-color: var(--accent-orange); /* Different disabled color for main action when active/loading */
             color: var(--bg-color-dark);
+            animation: pulse-loading 1.5s infinite ease-in-out; /* Add pulse for loading */
+            opacity: 1; /* Override opacity */
+        }
+        @keyframes pulse-loading {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.02); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         #api-key-section {
@@ -237,20 +278,19 @@
         #response-area {
             background-color: var(--bg-color-dark);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 20px;
             margin-top: 20px;
-            min-height: 150px;
-            max-height: 500px;
+            min-height: 180px; /* Slightly taller min-height */
+            max-height: 550px; /* Slightly taller max-height */
             overflow-x: auto;
             overflow-y: auto;
-            font-size: 0.95em;
-            line-height: 1.6;
+            font-size: 0.98em;
+            line-height: 1.7;
             word-wrap: break-word;
-            white-space: pre-wrap; /* Preserves whitespace and wraps lines */
-            position: relative; /* For copy button positioning */
-            /* tabindex="0" already in HTML */
-            /* aria-label="OmniAI Response Area" already in HTML */
+            white-space: pre-wrap;
+            position: relative;
+            box-shadow: inset 0 1px 5px rgba(0,0,0,0.3); /* Subtle inner shadow */
         }
 
         /* Specific styling for markdown elements within response-area */
@@ -264,207 +304,316 @@
             color: var(--text-color-faded);
         }
         #response-area li {
-            margin-bottom: 0.5em;
+            margin-bottom: 0.6em;
         }
         #response-area h1, #response-area h2, #response-area h3, #response-area h4, #response-area h5, #response-area h6 {
             color: var(--accent-blue);
-            margin-top: 1.5em;
+            margin-top: 1.8em; /* More space above headings */
             margin-bottom: 0.8em;
-            line-height: 1.2;
+            line-height: 1.3;
+            border-bottom: 1px dashed rgba(122, 162, 247, 0.2); /* Subtle divider */
+            padding-bottom: 0.3em;
         }
-        #response-area h1 { font-size: 1.8em; }
-        #response-area h2 { font-size: 1.6em; }
-        #response-area h3 { font-size: 1.4em; }
-        #response-area h4 { font-size: 1.2em; }
+        #response-area h1 { font-size: 2em; }
+        #response-area h2 { font-size: 1.7em; }
+        #response-area h3 { font-size: 1.5em; }
+        #response-area h4 { font-size: 1.3em; }
         #response-area strong {
-            color: var(--text-color-light);
+            color: var(--text-color-highlight);
+            font-weight: 700;
         }
         #response-area em {
             color: var(--accent-yellow);
+            font-style: italic;
         }
         #response-area blockquote {
-            border-left: 4px solid var(--accent-purple);
-            padding-left: 15px;
-            margin: 1em 0;
+            border-left: 5px solid var(--accent-purple); /* Thicker border */
+            padding-left: 18px;
+            margin: 1.5em 0;
             font-style: italic;
             color: var(--text-color-faded);
-            background-color: rgba(189, 147, 249, 0.1);
-            border-radius: 0 5px 5px 0;
+            background-color: rgba(187, 153, 255, 0.1); /* Lighter purple tint */
+            border-radius: 0 8px 8px 0; /* Softer border radius */
+            padding-top: 10px;
+            padding-bottom: 10px;
         }
         #response-area a {
             color: var(--accent-blue);
             text-decoration: none;
+            transition: color var(--transition-speed);
         }
         #response-area a:hover {
             text-decoration: underline;
+            color: var(--accent-orange); /* Orange on hover */
         }
         #response-area img {
-            max-width: 100%; /* Ensure images are responsive within the response area */
+            max-width: 100%;
             height: auto;
-            display: block; /* Remove extra space below image */
-            margin: 1em 0;
-            border-radius: 5px;
+            display: block;
+            margin: 1.5em auto; /* Center images */
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
 
-        /* highlight.js specific overrides for code blocks */
+        /* highlight.js specific overrides for code blocks (Dracula theme is good) */
         #response-area pre {
             background-color: #282a36; /* Dracula background for code */
-            padding: 15px;
-            border-radius: 5px;
+            padding: 18px; /* Larger padding */
+            border-radius: 8px; /* Softer corners */
             overflow-x: auto;
-            margin-bottom: 1em;
+            margin: 1.5em 0; /* More spacing */
             position: relative;
             font-size: 0.9em;
-            line-height: 1.4;
+            line-height: 1.5;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.4);
         }
         #response-area code {
             font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
-            background-color: rgba(98, 114, 164, 0.2); /* Light background for inline code */
-            padding: 2px 4px;
-            border-radius: 3px;
-            color: var(--text-color-light);
+            background-color: rgba(187, 153, 255, 0.15); /* Light purple background for inline code */
+            padding: 3px 6px;
+            border-radius: 4px;
+            color: var(--text-color-highlight);
             font-size: 0.9em;
+            white-space: pre-wrap; /* Ensure inline code wraps */
+            word-break: break-all;
         }
         #response-area pre code {
             background-color: transparent;
             padding: 0;
             color: inherit;
+            white-space: pre; /* Keep pre-wrap behavior for block code */
         }
 
         /* Copy Code Button */
         .copy-code-button {
             position: absolute;
-            top: 8px;
-            right: 8px;
-            background-color: rgba(139, 233, 253, 0.2);
+            top: 10px;
+            right: 10px;
+            background-color: rgba(122, 162, 247, 0.2);
             color: var(--accent-blue);
             border: 1px solid var(--accent-blue);
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 0.8em;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
             cursor: pointer;
-            opacity: 0.8;
-            transition: opacity 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+            opacity: 0.9;
+            transition: opacity var(--transition-speed), background-color var(--transition-speed), color var(--transition-speed), transform var(--transition-speed);
             z-index: 10;
-            line-height: 1; /* Fix height issue */
+            line-height: 1;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
+            font-weight: 600;
         }
         .copy-code-button:hover {
             opacity: 1;
             background-color: var(--accent-blue);
             color: var(--bg-color-dark);
             box-shadow: 0 0 0 2px var(--input-focus-shadow);
+            transform: translateY(-1px);
         }
         .copy-code-button:focus {
             outline: 2px solid var(--accent-blue);
-            outline-offset: 2px;
+            outline-offset: 3px;
+            background-color: var(--accent-blue);
+            color: var(--bg-color-dark);
         }
         .copy-code-button .icon {
-            font-size: 1em; /* Adjust icon size */
+            font-size: 1.1em;
             line-height: 1;
         }
 
+        /* Status Message Styling */
         .status-message {
-            margin-top: 10px;
-            padding: 8px 15px;
-            border-radius: 5px;
+            margin-top: 15px;
+            padding: 10px 20px;
+            border-radius: 8px;
             text-align: center;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            color: var(--accent-red);
-            background-color: rgba(255, 85, 85, 0.1);
-            border: 1px solid rgba(255, 85, 85, 0.3);
-            display: block; /* Ensure it takes full width */
+            font-weight: 600;
+            transition: all var(--transition-speed);
+            display: flex; /* Use flexbox for icon alignment */
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            font-size: 0.95em;
+            line-height: 1.4;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .status-message::before {
+            content: 'ℹ️'; /* Default info icon */
+            font-size: 1.2em;
         }
         .status-message.success {
             color: var(--accent-green);
-            background-color: rgba(80, 250, 123, 0.1);
-            border: 1px solid rgba(80, 250, 123, 0.3);
+            background-color: rgba(158, 206, 106, 0.1);
+            border: 1px solid rgba(158, 206, 106, 0.4);
+        }
+        .status-message.success::before {
+            content: '✅';
         }
         .status-message.warning {
             color: var(--accent-orange);
-            background-color: rgba(255, 184, 108, 0.1);
-            border: 1px solid rgba(255, 184, 108, 0.3);
+            background-color: rgba(255, 158, 100, 0.1);
+            border: 1px solid rgba(255, 158, 100, 0.4);
+        }
+        .status-message.warning::before {
+            content: '⚠️';
+        }
+        .status-message.error {
+            color: var(--accent-red);
+            background-color: rgba(247, 118, 142, 0.1);
+            border: 1px solid rgba(247, 118, 142, 0.4);
+        }
+        .status-message.error::before {
+            content: '❌';
         }
         .status-message:empty { /* Hide if no message */
             padding: 0;
             border: none;
             background-color: transparent;
             margin-top: 0;
+            min-height: 0;
+            box-shadow: none;
+        }
+        .status-message:empty::before {
+            content: none;
         }
 
+        /* Loading Spinner */
         .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
             font-style: italic;
             color: var(--accent-purple);
-            text-align: center;
-            margin-top: 15px;
-            animation: pulse 1.5s infinite ease-in-out;
+            font-size: 1.1em;
+            gap: 10px;
         }
-        @keyframes pulse {
-            0% { opacity: 0.6; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.02); }
-            100% { opacity: 0.6; transform: scale(1); }
+        .loading::before {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(187, 153, 255, 0.3);
+            border-top-color: var(--accent-purple);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         footer {
             margin-top: auto;
-            padding-top: 20px;
+            padding-top: 30px;
             color: var(--border-color);
-            font-size: 0.85em;
+            font-size: 0.88em;
             text-align: center;
             width: 100%;
             border-top: 1px solid var(--bg-color-light);
-            padding-top: 20px;
+            padding-bottom: 10px;
         }
 
         footer a {
             color: var(--accent-blue);
             text-decoration: none;
+            transition: color var(--transition-speed);
         }
         footer a:hover {
             text-decoration: underline;
+            color: var(--accent-orange);
         }
         .disclaimer {
-            font-size: 0.85em;
+            font-size: 0.9em;
             color: var(--accent-orange);
-            margin-top: 15px;
-            margin-bottom: 20px;
+            margin-top: 20px;
+            margin-bottom: 25px;
             line-height: 1.5;
-            padding: 10px;
-            background-color: rgba(255, 184, 108, 0.1);
-            border-radius: 5px;
+            padding: 15px;
+            background-color: rgba(255, 158, 100, 0.1);
+            border-radius: 8px;
             text-align: left;
-            border: 1px solid rgba(255, 184, 108, 0.3);
+            border: 1px solid rgba(255, 158, 100, 0.4);
+            box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+        }
+        .disclaimer strong {
+            color: var(--accent-yellow);
         }
 
         /* Responsive adjustments */
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            .container {
+                padding: 25px;
+                width: 95%;
+            }
+            h1 {
+                font-size: 2.2em;
+            }
+            h2 {
+                font-size: 1.4em;
+            }
+            .button-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+            button {
+                width: 100%;
+                min-width: unset;
+                padding: 12px 20px;
+            }
+            .toggle-password {
+                right: 12px;
+                font-size: 1.1em;
+            }
+            #response-area {
+                padding: 15px;
+            }
+            #response-area pre {
+                padding: 15px;
+            }
+            .copy-code-button {
+                padding: 5px 10px;
+                font-size: 0.8em;
+            }
+        }
+
+        @media (max-width: 480px) {
             body {
                 padding: 10px;
             }
             .container {
                 padding: 20px;
-                width: 95%;
             }
             h1 {
                 font-size: 1.8em;
+                margin-bottom: 20px;
             }
             h2 {
-                font-size: 1.2em;
+                font-size: 1.3em;
+                margin-top: 20px;
             }
-            .button-group {
-                flex-direction: column;
-                gap: 8px;
+            input, textarea, button {
+                font-size: 0.95em;
+                padding: 10px;
             }
-            button {
-                width: 100%;
-                margin: 0;
+            .disclaimer {
+                font-size: 0.85em;
+                padding: 12px;
             }
-            .toggle-password {
-                right: 12px;
+            .status-message {
+                font-size: 0.9em;
+                padding: 8px 15px;
+            }
+            .loading {
+                font-size: 1em;
+            }
+            .loading::before {
+                width: 16px;
+                height: 16px;
             }
         }
     </style>
@@ -481,11 +630,11 @@
                     <strong>Important Security Note:</strong> Your API key is stored locally in your browser's `localStorage`.
                     This is convenient for personal use, but it is **not secure** for sensitive
                     permissions or production applications without a dedicated secure backend proxy.
-                    For enhanced security, consider using a limited-permission API key.
+                    For enhanced security, consider using a limited-permission API key and always be cautious.
                 </p>
                 <label for="apiKey">API Key:</label>
                 <div class="input-group">
-                    <input type="password" id="apiKey" class="api-key-input" placeholder="Paste your Google AI API key here" autocomplete="off" aria-describedby="apiKeyStatus">
+                    <input type="password" id="apiKey" class="api-key-input" placeholder="Paste your Google AI API key here (e.g., AIzaSy...)" autocomplete="off" aria-describedby="apiKeyStatus">
                     <button type="button" id="toggleApiKeyVisibility" class="toggle-password" aria-label="Toggle API Key Visibility">👁️</button>
                 </div>
                 <div class="button-group">
@@ -498,13 +647,13 @@
             <section id="ai-interaction-section">
                 <h2>Prompt Gemini 2.5 Flash</h2>
                 <label for="promptInput">Your Prompt:</label>
-                <textarea id="promptInput" placeholder="Ask OmniAI anything... e.g., 'Explain quantum computing in simple terms'" aria-required="true"></textarea>
+                <textarea id="promptInput" placeholder="Ask OmniAI anything... e.g., 'Explain quantum computing in simple terms, focusing on qubits and superposition.' or 'Write a Python function to reverse a string.'" aria-required="true"></textarea>
                 <div class="button-group">
                     <button id="askGeminiButton" aria-label="Ask OmniAI for a response">Ask OmniAI</button>
                     <button id="clearPromptButton" aria-label="Clear your prompt input">Clear Prompt</button>
                 </div>
 
-                <div id="loadingIndicator" class="loading" style="display: none;" role="status" aria-live="polite" aria-atomic="true" aria-busy="true">Thinking...</div>
+                <div id="loadingIndicator" class="loading" style="display: none;" role="status" aria-live="polite" aria-atomic="true" aria-busy="false">Thinking...</div>
                 <p id="geminiStatus" class="status-message" role="status" aria-live="polite" aria-atomic="true"></p>
 
                 <h2>OmniAI's Response:</h2>
@@ -579,6 +728,7 @@
                 element.className = `status-message ${type}`;
                 element.setAttribute('aria-live', 'polite'); // Ensure screen readers announce new messages
                 element.setAttribute('aria-atomic', 'true'); // Announce the entire region
+                element.style.display = 'flex'; // Ensure it's visible if it has content
             };
 
             /**
@@ -590,40 +740,7 @@
                 element.className = 'status-message'; // Reset to base class
                 element.removeAttribute('aria-live');
                 element.removeAttribute('aria-atomic');
-            };
-
-            /**
-             * Enables/disables buttons related to API key management.
-             * @param {boolean} enable - True to enable, false to disable.
-             */
-            const setApiKeyInputAndButtonsEnabled = (enable) => {
-                apiKeyInput.disabled = !enable;
-                setApiKeyButton.disabled = !enable;
-                toggleApiKeyVisibilityButton.disabled = !enable;
-                if (!enable) {
-                    clearApiKeyButton.disabled = false; // Clear button can always be active if key exists
-                } else {
-                    clearApiKeyButton.disabled = true; // No key to clear if input is enabled
-                }
-            };
-
-            /**
-             * Enables/disables buttons related to prompt interaction.
-             * @param {boolean} enable - True to enable, false to disable.
-             */
-            const setPromptButtonsEnabled = (enable) => {
-                askGeminiButton.disabled = !enable;
-                clearPromptButton.disabled = !enable;
-                promptInput.disabled = !enable;
-            };
-
-            /**
-             * Enables/disables buttons related to response actions.
-             * @param {boolean} enable - True to enable, false to disable.
-             */
-            const setResponseActionButtonsEnabled = (enable) => {
-                copyResponseButton.disabled = !enable;
-                clearResponseButton.disabled = !enable;
+                element.style.display = 'none'; // Hide if empty
             };
 
             /**
@@ -635,6 +752,12 @@
                 if (typeof marked !== 'undefined' && marked.parse) {
                     responseArea.innerHTML = marked.parse(markdownText);
 
+                    // Apply highlight.js to code blocks after markdown parsing
+                    responseArea.querySelectorAll('pre code').forEach((block) => {
+                        hljs.highlightElement(block);
+                    });
+
+                    // Add copy buttons to code blocks
                     responseArea.querySelectorAll('pre').forEach(pre => {
                         const code = pre.querySelector('code');
                         if (code) {
@@ -664,7 +787,8 @@
                     responseArea.textContent = markdownText; // Fallback if marked.js fails
                 }
                 responseButtonsGroup.style.display = 'flex';
-                setResponseActionButtonsEnabled(true);
+                copyResponseButton.disabled = false;
+                clearResponseButton.disabled = false;
                 responseArea.scrollTop = 0; // Scroll to top of response area for new content
             };
 
@@ -675,7 +799,8 @@
                 responseArea.innerHTML = INITIAL_RESPONSE_PLACEHOLDER;
                 responseButtonsGroup.style.display = 'none';
                 clearStatusMessage(geminiStatus);
-                setResponseActionButtonsEnabled(false);
+                copyResponseButton.disabled = true;
+                clearResponseButton.disabled = true;
             };
 
             // --- UI State Management ---
@@ -685,17 +810,38 @@
                     aiInteractionSection.style.display = 'block';
                     setStatusMessage(apiKeyStatus, 'API Key loaded. Ready to chat!', 'success');
                     clearApiKeyButton.style.display = 'inline-block';
-                    setApiKeyInputAndButtonsEnabled(false); // Input disabled, save button disabled, clear button enabled
-                    apiKeyInput.value = ''; // Ensure input field is clear
-                    apiKeyInput.type = 'password'; // Keep it password type
-                    toggleApiKeyVisibilityButton.textContent = '👁️'; // Reset icon
+                    
+                    // Disable API key input and set/toggle buttons
+                    apiKeyInput.disabled = true;
+                    setApiKeyButton.disabled = true;
+                    toggleApiKeyVisibilityButton.disabled = true;
+
+                    // Ensure prompt interaction is enabled
+                    promptInput.disabled = false;
+                    askGeminiButton.disabled = false;
+                    clearPromptButton.disabled = false;
+
+                    // Clear and reset API key input value and type
+                    apiKeyInput.value = '';
+                    apiKeyInput.type = 'password';
+                    toggleApiKeyVisibilityButton.textContent = '👁️';
                     promptInput.focus();
                 } else {
                     apiKeySection.style.display = 'block';
                     aiInteractionSection.style.display = 'none';
                     setStatusMessage(apiKeyStatus, 'Please enter your API key to begin.', 'warning');
                     clearApiKeyButton.style.display = 'none';
-                    setApiKeyInputAndButtonsEnabled(true); // Input enabled, save button enabled, clear button disabled
+
+                    // Enable API key input and set/toggle buttons
+                    apiKeyInput.disabled = false;
+                    setApiKeyButton.disabled = false;
+                    toggleApiKeyVisibilityButton.disabled = false;
+
+                    // Disable prompt interaction
+                    promptInput.disabled = true;
+                    askGeminiButton.disabled = true;
+                    clearPromptButton.disabled = true;
+
                     apiKeyInput.value = '';
                     apiKeyInput.type = 'password';
                     toggleApiKeyVisibilityButton.textContent = '👁️';
@@ -758,14 +904,16 @@
                 }
 
                 isFetching = true;
-                loadingIndicator.style.display = 'block';
+                loadingIndicator.style.display = 'flex'; // Use flex for spinner alignment
                 loadingIndicator.setAttribute('aria-busy', 'true');
                 clearStatusMessage(geminiStatus);
-                clearResponse();
+                clearResponse(); // Clear previous response
 
-                setPromptButtonsEnabled(false);
+                // Disable prompt interaction elements during fetch
+                promptInput.disabled = true;
+                askGeminiButton.disabled = true;
                 askGeminiButton.textContent = 'Asking...'; // Visual feedback on button
-                askGeminiButton.disabled = true; // Re-disable to ensure visual state
+                clearPromptButton.disabled = true;
 
                 try {
                     // --- The "Brain Engine" - How OmniAI 'magically' processes your request ---
@@ -830,7 +978,7 @@
 
                 } catch (error) {
                     console.error('Gemini API Error:', error);
-                    setStatusMessage(geminiStatus, `Error: ${error.message}`, 'error');
+                    setStatusMessage(geminiStatus, `Failed to get a response. Please check your API key, prompt, and network connection. Details: ${error.message}`, 'error');
                     responseArea.innerHTML = `<p class="status-message error">Failed to get a response. Please check your API key, prompt, and network connection.</p><p class="status-message error">Details: ${error.message}</p>`;
                     responseButtonsGroup.style.display = 'flex';
                     copyResponseButton.disabled = true;
@@ -839,8 +987,13 @@
                     isFetching = false;
                     loadingIndicator.style.display = 'none';
                     loadingIndicator.removeAttribute('aria-busy');
-                    setPromptButtonsEnabled(true);
+                    
+                    // Re-enable prompt interaction elements
+                    promptInput.disabled = false;
+                    askGeminiButton.disabled = false;
                     askGeminiButton.textContent = 'Ask OmniAI'; // Reset button text
+                    clearPromptButton.disabled = false;
+                    promptInput.focus();
                 }
             });
 
@@ -859,10 +1012,14 @@
             });
 
             copyResponseButton.addEventListener('click', async () => {
+                // Create a temporary div to strip HTML and extract only text
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = responseArea.innerHTML;
+                
+                // Remove dynamically added copy buttons from the content before copying
                 tempDiv.querySelectorAll('.copy-code-button').forEach(btn => btn.remove());
-                const responseText = tempDiv.textContent;
+                
+                const responseText = tempDiv.textContent.trim(); // Trim whitespace from start/end
 
                 try {
                     await navigator.clipboard.writeText(responseText);
@@ -877,8 +1034,10 @@
 
             // Initial setup on page load
             const init = () => {
+                clearStatusMessage(apiKeyStatus); // Clear any initial status
+                clearStatusMessage(geminiStatus); // Clear any initial status
                 updateUI();
-                clearResponse();
+                clearResponse(); // Ensure response area is in initial state
             };
 
             init();
@@ -886,4 +1045,3 @@
     </script>
 </body>
 </html>
-```
