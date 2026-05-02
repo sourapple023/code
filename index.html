@@ -4,20 +4,81 @@
     <meta charset="utf-8">
     <title>OMNI | Aurora Intelligence</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Space+Grotesk:wght@300;500;700&display=swap');
+    <meta name="description" content="OMNI: Your Universal Neural Interface powered by Aurora Intelligence. Engage with Gemini 2.5 Flash for advanced assistance.">
 
+    <!-- Favicon (Recommended) -->
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+    <!-- Preload Fonts for Performance -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Space+Grotesk:wght@300;500;700&display=swap">
+    </noscript>
+
+    <!-- Tailwind CSS (For Production, consider compiling locally for performance) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Recommended: Add your Tailwind configuration if you have custom themes, plugins, etc. -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    // Example: Define your custom colors here if not using CSS variables directly in classes
+                    colors: {
+                        'omni-dark-bg': '#050505',
+                        'omni-text-light': '#ffffff',
+                        'omni-border-light': 'rgba(255, 255, 255, 0.1)',
+                        'omni-glass-bg': 'rgba(255, 255, 255, 0.03)',
+                        'omni-user-msg-bg': 'rgba(255, 255, 255, 0.07)',
+                        'omni-ai-msg-bg': 'rgba(0, 245, 255, 0.05)',
+                        'omni-accent': '#00f5ff',
+                        'omni-accent-darker': 'rgba(0, 245, 255, 0.4)',
+                        'omni-accent-glow': 'rgba(0, 245, 255, 0.15)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* General CSS Variables for Theming */
         :root {
             --aurora-gradient: linear-gradient(90deg, #00f5ff, #7cff00, #ff00e5, #ffaa00, #00f5ff);
+            --color-bg-dark: #050505;
+            --color-text-light: #ffffff;
+            --color-border-light: rgba(255, 255, 255, 0.1);
+            --color-glass-bg: rgba(255, 255, 255, 0.03);
+            --color-user-msg-bg: rgba(255, 255, 255, 0.07);
+            --color-ai-msg-bg: rgba(0, 245, 255, 0.05);
+            --color-accent: #00f5ff;
+            --color-accent-border: rgba(0, 245, 255, 0.4);
+            --color-accent-glow: rgba(0, 245, 255, 0.15);
+            --border-radius-lg: 24px;
+            --border-radius-md: 16px;
+            --border-radius-sm: 4px;
         }
 
         body {
-            background-color: #050505;
-            color: #ffffff;
+            background-color: var(--color-bg-dark);
+            color: var(--color-text-light);
             font-family: 'Inter', sans-serif;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh; /* Use min-height for better flexibility */
+            display: flex; /* Keep flexbox for layout */
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem; /* Base padding for small screens */
+            box-sizing: border-box; /* Ensure padding is included in element's total width and height */
+            overflow: hidden; /* Prevent body scroll, rely on inner elements for scroll */
+        }
+
+        /* Responsive padding for larger screens */
+        @media (min-width: 768px) {
+            body {
+                padding: 2rem;
+            }
         }
 
         .font-heading { font-family: 'Space Grotesk', sans-serif; }
@@ -27,7 +88,7 @@
             background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: aurora-flow 10s linear indefinite;
+            animation: aurora-flow 10s linear infinite; /* Changed indefinite to infinite for clarity */
         }
 
         @keyframes aurora-flow {
@@ -36,16 +97,18 @@
         }
 
         .glass-panel {
-            background: rgba(255, 255, 255, 0.03);
+            background: var(--color-glass-bg);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--border-radius-lg);
         }
 
         .chat-container {
-            height: calc(100vh - 220px);
+            height: calc(100vh - 220px); /* Height calculation adjusted for fixed header/footer */
             scrollbar-width: thin;
             scrollbar-color: rgba(255,255,255,0.1) transparent;
+            /* Ensure smooth scrolling when new messages are added */
+            scroll-behavior: smooth;
         }
 
         .chat-container::-webkit-scrollbar {
@@ -57,28 +120,35 @@
             border-radius: 10px;
         }
 
+        /* Message bubble styles */
         .message-user {
-            background: rgba(255, 255, 255, 0.07);
+            background: var(--color-user-msg-bg);
             align-self: flex-end;
-            border-bottom-right-radius: 4px;
+            border-bottom-right-radius: var(--border-radius-sm); /* Keep specific corner radius */
+            border-top-left-radius: var(--border-radius-md);
+            border-top-right-radius: var(--border-radius-md);
+            border-bottom-left-radius: var(--border-radius-md);
         }
 
         .message-ai {
-            background: rgba(0, 245, 255, 0.05);
-            border-left: 2px solid #00f5ff;
+            background: var(--color-ai-msg-bg);
+            border-left: 2px solid var(--color-accent);
             align-self: flex-start;
-            border-bottom-left-radius: 4px;
+            border-bottom-left-radius: var(--border-radius-sm); /* Keep specific corner radius */
+            border-top-left-radius: var(--border-radius-md);
+            border-top-right-radius: var(--border-radius-md);
+            border-bottom-right-radius: var(--border-radius-md);
         }
 
         .input-glow:focus-within {
-            box-shadow: 0 0 20px rgba(0, 245, 255, 0.15);
-            border-color: rgba(0, 245, 255, 0.4);
+            box-shadow: 0 0 20px var(--color-accent-glow);
+            border-color: var(--color-accent-border);
         }
 
         .loading-dots div {
             width: 6px;
             height: 6px;
-            background: #00f5ff;
+            background: var(--color-accent);
             border-radius: 50%;
             animation: bounce 1.4s infinite ease-in-out both;
         }
@@ -89,15 +159,35 @@
             0%, 80%, 100% { transform: scale(0); }
             40% { transform: scale(1); }
         }
+
+        /* Accessibility: Reduce motion for users who prefer it */
+        @media (prefers-reduced-motion) {
+            .aurora-text,
+            .loading-dots div {
+                animation: none !important;
+            }
+            .aurora-text {
+                background-image: linear-gradient(90deg, #00f5ff, #ffaa00); /* Static gradient */
+            }
+            #outerGlow {
+                filter: none; /* Disable glow filter if it uses animation */
+            }
+            #auroraHue stop {
+                animation: none !important; /* Disable SVG gradient animation */
+            }
+            .message-user, .message-ai {
+                animation: none !important; /* Disable fade/slide animations for messages */
+            }
+        }
     </style>
 </head>
-<body class="flex flex-col items-center justify-between p-4 md:p-8">
+<body class="flex flex-col items-center justify-between">
 
     <!-- Header Section -->
-    <header class="w-full max-w-4xl flex flex-col items-center gap-2 mb-6">
+    <header class="w-full max-w-4xl flex flex-col items-center gap-2 mb-6" role="banner">
         <!-- Logo SVG -->
         <div class="w-48 h-auto">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 150" role="img" aria-label="OMNI logo">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 150" role="img" aria-label="OMNI AI Logo with animated aurora gradient">
                 <defs>
                     <linearGradient id="auroraHue" x1="-120%" y1="0%" x2="120%" y2="0%" gradientUnits="userSpaceOnUse">
                         <stop offset="0%" stop-color="#00f5ff"/>
@@ -105,22 +195,24 @@
                         <stop offset="58%" stop-color="#ff00e5"/>
                         <stop offset="82%" stop-color="#ffaa00"/>
                         <stop offset="100%" stop-color="#00f5ff"/>
-                        <animate attributeName="x1" from="-120%" to="0%" dur="26s" repeatCount="indefinite"/>
-                        <animate attributeName="x2" from="120%" to="240%" dur="26s" repeatCount="indefinite"/>
+                        <animate attributeName="x1" from="-120%" to="0%" dur="26s" repeatCount="indefinite" />
+                        <animate attributeName="x2" from="120%" to="240%" dur="26s" repeatCount="indefinite" />
                     </linearGradient>
                     <filter id="outerGlow" x="-60%" y="-60%" width="220%" height="220%">
                         <feGaussianBlur stdDeviation="6"/>
                         <feColorMatrix values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.85 0"/>
+                        <animate attributeName="opacity" values="0.58;0.66;0.58" dur="22s" repeatCount="indefinite" />
                     </filter>
                 </defs>
                 <g transform="translate(100 37.5) scale(0.5)">
+                    <!-- Animated glow effect for the logo outline -->
                     <g fill="none" stroke="url(#auroraHue)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" filter="url(#outerGlow)">
-                        <animate attributeName="opacity" values="0.58;0.66;0.58" dur="22s" repeatCount="indefinite"/>
                         <path d="M70 22 C44 22 22 44 22 75 C22 106 44 128 70 128 C96 128 118 106 118 75 C118 44 96 22 70 22 Z"/>
                         <path d="M132 124 V38 Q132 26 144 26 H148 L184 92 L220 26 H224 Q236 26 236 38 V124"/>
                         <path d="M246 124 V38 Q246 26 258 26 H262 L318 114 Q322 124 332 124 V38 Q332 26 320 26"/>
                         <rect x="350" y="26" width="30" height="98" rx="15"/>
                     </g>
+                    <!-- Solid white fill for the main logo, sitting on top of the glow -->
                     <g fill="#ffffff">
                         <path d="M70 22 C44 22 22 44 22 75 C22 106 44 128 70 128 C96 128 118 106 118 75 C118 44 96 22 70 22 Z"/>
                         <path d="M132 124 V38 Q132 26 144 26 H148 L184 92 L220 26 H224 Q236 26 236 38 V124"/>
@@ -134,37 +226,43 @@
     </header>
 
     <!-- Main Chat Display -->
-    <main class="w-full max-w-4xl flex-grow glass-panel p-4 md:p-6 mb-6 flex flex-col relative overflow-hidden">
-        <div id="chatHistory" class="chat-container flex flex-col gap-4 overflow-y-auto pr-2">
+    <main class="w-full max-w-4xl flex-grow glass-panel p-4 md:p-6 mb-6 flex flex-col relative overflow-hidden" role="main">
+        <div id="chatHistory" class="chat-container flex flex-col gap-4 overflow-y-auto pr-2" role="log" aria-live="polite" aria-atomic="false">
             <!-- Welcome Message -->
             <div class="message-ai p-4 rounded-2xl max-w-[85%] text-sm md:text-base">
                 Welcome to OMNI. My intelligence is powered by Gemini 2.5 Flash. How can I assist your objective today?
             </div>
+            <!-- Dynamic chat messages will be appended here -->
         </div>
 
         <!-- Loading Indicator -->
-        <div id="loading" class="hidden absolute bottom-24 left-10 flex items-center gap-2 text-xs text-[#00f5ff]/60">
+        <div id="loading" class="hidden absolute bottom-24 left-10 flex items-center gap-2 text-xs text-[#00f5ff]/60" aria-live="assertive" aria-atomic="true">
             <span class="font-heading uppercase tracking-tighter">Omni Processing</span>
             <div class="loading-dots flex gap-1">
-                <div></div><div></div><div></div>
+                <div role="presentation"></div><div role="presentation"></div><div role="presentation"></div>
             </div>
         </div>
     </main>
 
     <!-- Input Footer -->
-    <footer class="w-full max-w-4xl mb-4">
+    <footer class="w-full max-w-4xl mb-4" role="contentinfo">
         <form id="chatForm" class="relative group">
             <div class="glass-panel input-glow transition-all duration-300 p-2 pr-4 flex items-center border border-white/10">
-                <input 
-                    type="text" 
+                <label for="userInput" class="sr-only">Message OMNI</label>
+                <input
+                    type="text"
                     id="userInput"
                     autocomplete="off"
-                    placeholder="Message OMNI..." 
+                    placeholder="Message OMNI..."
                     class="bg-transparent border-none outline-none flex-grow p-3 text-white placeholder-white/20 focus:ring-0"
+                    aria-label="Enter your message for OMNI"
+                    tabindex="0"
                 >
-                <button 
+                <button
                     type="submit"
                     class="bg-white text-black px-6 py-2 rounded-xl font-heading font-bold hover:bg-[#00f5ff] transition-colors duration-200 active:scale-95 disabled:opacity-50"
+                    aria-label="Send message"
+                    tabindex="0"
                 >
                     SEND
                 </button>
@@ -173,51 +271,109 @@
     </footer>
 
     <script>
-        const apiKey = ""; // Set by environment
+        /*
+        *   CRITICAL SECURITY WARNING:
+        *   --------------------------------------------------------------------------------
+        *   Embedding your Google Gemini API key directly in client-side JavaScript (like `apiKey = "..."`)
+        *   is INSECURE and should NEVER be done in a production application.
+        *   This key would be exposed to anyone inspecting your website's source code,
+        *   allowing them to use your key and potentially incur costs on your account.
+        *
+        *   For a production application, you MUST proxy your API requests through a secure
+        *   backend server. The server can then securely store and use your API key to make
+        *   requests to the Gemini API, returning the responses to your client-side app.
+        *   --------------------------------------------------------------------------------
+        */
+        const API_KEY = ""; // Placeholder. This value *must* be set securely via a server-side environment variable.
+        const MODEL_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent";
+        const OMNI_SYSTEM_INSTRUCTION = "You are OMNI, a futuristic, highly intelligent AI assistant. Your persona is calm, efficient, and sophisticated. Use concise but deeply insightful language.";
+
+        // DOM Elements
         const chatHistory = document.getElementById('chatHistory');
         const chatForm = document.getElementById('chatForm');
         const userInput = document.getElementById('userInput');
-        const loading = document.getElementById('loading');
+        const loadingIndicator = document.getElementById('loading');
+        const submitButton = chatForm.querySelector('button[type="submit"]');
 
-        const MODEL_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent";
+        // Message roles for clarity
+        const MESSAGE_ROLE = {
+            USER: 'user',
+            AI: 'ai'
+        };
 
+        /**
+         * Appends a new message to the chat history.
+         * @param {string} text - The message text.
+         * @param {string} role - The role of the sender ('user' or 'ai').
+         */
         function addMessage(text, role) {
             const msgDiv = document.createElement('div');
-            msgDiv.className = `p-4 rounded-2xl max-w-[85%] text-sm md:text-base animate-in fade-in slide-in-from-bottom-2 duration-300 ${role === 'user' ? 'message-user' : 'message-ai'}`;
+            // Using `animate-in` classes which would require a Tailwind animation plugin,
+            // or custom CSS animations if not using such a plugin.
+            msgDiv.className = `p-4 rounded-2xl max-w-[85%] text-sm md:text-base animate-in fade-in slide-in-from-bottom-2 duration-300 ${role === MESSAGE_ROLE.USER ? 'message-user' : 'message-ai'}`;
             msgDiv.textContent = text;
             chatHistory.appendChild(msgDiv);
+            // Ensure scroll to bottom after new message
             chatHistory.scrollTop = chatHistory.scrollHeight;
         }
 
+        /**
+         * Fetches a response from the Gemini API with retry logic.
+         * @param {string} query - The user's query.
+         * @param {number} [retries=5] - Number of retry attempts.
+         * @param {number} [delay=1000] - Initial delay between retries in ms.
+         * @returns {Promise<string>} - The AI's response or an error message.
+         */
         async function fetchGeminiResponse(query, retries = 5, delay = 1000) {
+            if (!API_KEY) {
+                return "System error: API key is not configured. Please contact support.";
+            }
+
             try {
-                const response = await fetch(`${MODEL_URL}?key=${apiKey}`, {
+                const response = await fetch(`${MODEL_URL}?key=${API_KEY}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ parts: [{ text: query }] }],
-                        systemInstruction: { 
-                            parts: [{ text: "You are OMNI, a futuristic, highly intelligent AI assistant. Your persona is calm, efficient, and sophisticated. Use concise but deeply insightful language." }] 
-                        }
+                        systemInstruction: { parts: [{ text: OMNI_SYSTEM_INSTRUCTION }] }
                     })
                 });
 
                 if (!response.ok) {
+                    if (response.status === 429) { // Too Many Requests
+                        console.warn("Rate limit hit. Retrying...");
+                    } else {
+                        console.error(`API Error: ${response.status} - ${response.statusText}`);
+                    }
                     if (retries > 0) {
                         await new Promise(resolve => setTimeout(resolve, delay));
-                        return fetchGeminiResponse(query, retries - 1, delay * 2);
+                        return fetchGeminiResponse(query, retries - 1, delay * 2); // Exponential backoff
                     }
-                    throw new Error('Signal lost. Unable to contact OMNI core.');
+                    throw new Error(`Signal lost. Unable to contact OMNI core. (Status: ${response.status})`);
                 }
 
                 const data = await response.json();
-                return data.candidates?.[0]?.content?.parts?.[0]?.text || "Communication error: Empty signal.";
+                const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (!aiText) {
+                    // Check for blocked content or safety issues
+                    if (data.promptFeedback?.blockReason) {
+                        return `OMNI detected potential content policy violations: ${data.promptFeedback.blockReason}. Please refine your query.`;
+                    }
+                    if (data.candidates?.[0]?.finishReason === 'SAFETY') {
+                        return "OMNI's safety protocols were engaged. Please refine your query.";
+                    }
+                    return "Communication error: Empty signal received from OMNI.";
+                }
+                return aiText;
+
             } catch (error) {
+                console.error("Fetch error:", error);
                 if (retries > 0) {
                     await new Promise(resolve => setTimeout(resolve, delay));
                     return fetchGeminiResponse(query, retries - 1, delay * 2);
                 }
-                return "The interface is currently experiencing high-dimensional interference. Please try again.";
+                return "The interface is currently experiencing high-dimensional interference. Please try again or check your network connection.";
             }
         }
 
@@ -226,22 +382,27 @@
             const text = userInput.value.trim();
             if (!text) return;
 
-            // Clear input and show user message
+            // Immediately add user message and clear input
+            addMessage(text, MESSAGE_ROLE.USER);
             userInput.value = '';
-            addMessage(text, 'user');
-            
-            // Show loading
-            loading.classList.remove('hidden');
-            const submitBtn = chatForm.querySelector('button');
-            submitBtn.disabled = true;
+
+            // Show loading and disable input
+            loadingIndicator.classList.remove('hidden');
+            submitButton.disabled = true;
+            userInput.disabled = true; // Disable input field during processing
+            userInput.setAttribute('aria-busy', 'true');
 
             // Get AI Response
             const aiResponse = await fetchGeminiResponse(text);
-            
-            // Hide loading and show AI message
-            loading.classList.add('hidden');
-            submitBtn.disabled = false;
-            addMessage(aiResponse, 'ai');
+
+            // Hide loading, enable input, and show AI message
+            loadingIndicator.classList.add('hidden');
+            submitButton.disabled = false;
+            userInput.disabled = false; // Re-enable input field
+            userInput.removeAttribute('aria-busy');
+            userInput.focus(); // Re-focus the input after processing
+
+            addMessage(aiResponse, MESSAGE_ROLE.AI);
         });
 
         // Focus input on load
